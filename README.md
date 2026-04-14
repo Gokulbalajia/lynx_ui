@@ -42,7 +42,15 @@ src/
     ├── Checkout.js           # Address selection + order placement
     ├── Orders.js             # User order history
     ├── Profile.js            # User profile display
-    ├── Admin.js              # Admin panel (orders/products/pets tabs)
+    ├── Admin.js              # Admin panel route wrapper
+    ├── admin/
+    │   ├── AdminDashboard.jsx # Admin homepage stats
+    │   ├── AdminLayout.jsx    # Admin layout + sidebar
+    │   ├── AdminOrders.jsx    # Manage orders
+    │   ├── AdminProducts.jsx  # Manage products
+    │   ├── AdminPets.jsx      # Manage pets
+    │   ├── AdminPetTypes.jsx  # Manage pet types
+    │   └── AdminCategories.jsx# Manage categories
     ├── Categories.js         # Category management (admin)
     ├── PetTypes.js           # Pet type management (admin)
     ├── ProductsPage.jsx      # Product listing with filters
