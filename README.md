@@ -11,7 +11,7 @@ npm install
 
 2. Create `.env` file:
 ```
-REACT_APP_API_URL=http://localhost:8000
+REACT_APP_API_URL=https://pet-shop-api-t1hm.onrender.com
 REACT_APP_ADMIN_EMAIL=admin@lynxpetshop.com
 ```
 
