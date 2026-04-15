@@ -61,14 +61,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const formData = new FormData();
-      formData.append('username', email);
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'password');
+      formData.append('username', identifier);
       formData.append('password', password);
+      formData.append('scope', '');
+      formData.append('client_id', '');
+      formData.append('client_secret', '');
 
       const response = await axios.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
       const { access_token } = response.data;
@@ -78,17 +82,17 @@ export const AuthProvider = ({ children }) => {
 
       const payload = parseJwtPayload(access_token);
 
-      const loginEmail = email.toLowerCase().trim();
+      const loginIdentifier = identifier.toLowerCase().trim();
       const jwtEmail = payload?.email?.toLowerCase() || '';
 
       const isAdminUser =
-        loginEmail === ADMIN_EMAIL.toLowerCase() ||
+        loginIdentifier === ADMIN_EMAIL.toLowerCase() ||
         jwtEmail === ADMIN_EMAIL.toLowerCase();
 
       const profile = {
         id: payload?.sub || payload?.user_id || payload?.id || null,
-        name: payload?.name || payload?.username || loginEmail.split('@')[0],
-        email: loginEmail,
+        name: payload?.name || payload?.username || loginIdentifier.split('@')[0],
+        email: jwtEmail || loginIdentifier,
         phone: payload?.phone || '',
         role_id: isAdminUser ? ADMIN_ROLE_ID : 2,
         role: isAdminUser ? 'admin' : 'user',

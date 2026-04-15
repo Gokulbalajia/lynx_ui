@@ -5,7 +5,7 @@ import { Mail, Lock } from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
   const [error, setError] = useState('');
@@ -28,7 +28,7 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.identifier, formData.password);
 
     if (result.success) {
       if (result.isAdmin) {
@@ -66,15 +66,15 @@ const Login = () => {
             )}
 
             <div>
-              <label className="block text-zinc-300 font-medium mb-2">Email</label>
+              <label className="block text-zinc-300 font-medium mb-2">Email or Username</label>
               <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 focus-within:border-blue-500">
                 <Mail size={18} className="text-zinc-500" />
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="identifier"
+                  value={formData.identifier}
                   onChange={handleChange}
-                  placeholder="your@email.com"
+                  placeholder="Email or username"
                   className="flex-1 bg-transparent outline-none text-white placeholder-zinc-500"
                   required
                 />
