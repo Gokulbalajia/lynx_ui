@@ -7,7 +7,15 @@ const Header = ({ cartCount }) => {
   const { isAuthenticated, logout, user, isAdmin, isUser } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const showUserLinks = isUser && !isAdmin;
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/products?search=${encodeURIComponent(query)}` : '/products');
+  };
 
   const handleLogout = () => {
     logout();
@@ -33,6 +41,9 @@ const Header = ({ cartCount }) => {
           <input 
             type="text" 
             placeholder="Search for pets, food, or toys..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pl-10 pr-4 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
         </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/Header';
@@ -37,8 +38,52 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+function AppRoutes() {
+  const { token } = useAuth();
   const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    axios.get('/').catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      setCartItems([]);
+      return;
+    }
+
+    const loadServerCart = async () => {
+      try {
+        const response = await axios.get('/cart/');
+        if (Array.isArray(response.data)) {
+          const serverItems = response.data.map((entry) => {
+            const itemType = entry.item_type || (entry.pet_id ? 'pet' : 'product');
+            return {
+              item_type: itemType,
+              id: entry.pet_id || entry.product_id || entry.product_variant_id || entry.id,
+              cart_item_id: entry.id,
+              name:
+                entry.product?.name || entry.pet?.name || entry.name ||
+                (itemType === 'pet' ? 'Pet item' : 'Product item'),
+              img:
+                entry.product_variant?.images?.[0]?.image_url ||
+                entry.pet?.images?.[0]?.image_url ||
+                entry.image_url ||
+                '',
+              price: parseFloat(entry.price || entry.product_variant?.price || entry.pet?.price || 0),
+              quantity: entry.quantity || 1,
+              category: entry.product?.category || entry.pet?.pet_type?.name || entry.category || '',
+            };
+          });
+          setCartItems(serverItems);
+        }
+      } catch (error) {
+        console.error('Unable to restore cart from server', error.response?.data || error);
+      }
+    };
+
+    loadServerCart();
+  }, [token]);
 
   const handleAddToCart = (product) => {
     setCartItems((currentItems) => {
@@ -63,64 +108,80 @@ function App() {
     setCartItems([]);
   };
 
+  const handleUpdateCartQuantity = (itemId, itemType, quantity) => {
+    setCartItems((currentItems) => {
+      const updatedItems = currentItems.map((item) => {
+        if (item.id !== itemId || item.item_type !== itemType) return item;
+        return { ...item, quantity: Math.max(1, quantity) };
+      });
+      return updatedItems.filter((item) => item.quantity > 0);
+    });
+  };
+
+  return (
+    <Router>
+      <div className="App bg-black text-zinc-100 min-h-screen">
+        <Header cartCount={cartItems.length} />
+        <main>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <Home 
+                  cartItems={cartItems}
+                  onAddToCart={handleAddToCart}
+                  onClearCart={handleClearCart}
+                />
+              } 
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/cart" element={<Cart cartItems={cartItems} onRemoveFromCart={handleRemoveFromCart} onUpdateQuantity={handleUpdateCartQuantity} />} />
+            <Route path="/checkout" element={
+              <ProtectedRoute>
+                <Checkout cartItems={cartItems} onClearCart={handleClearCart} />
+              </ProtectedRoute>
+            } />
+            <Route path="/products" element={<ProductsPage onAddToCart={handleAddToCart} />} />
+            <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
+            <Route path="/pets" element={<PetsPage onAddToCart={handleAddToCart} />} />
+            <Route path="/pets/:id" element={<PetDetailPage onAddToCart={handleAddToCart} />} />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders/:id" element={
+              <ProtectedRoute>
+                <OrderDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/*" element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            } />
+            <Route path="/addresses" element={
+              <ProtectedRoute>
+                <Addresses />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </main>
+      </div>
+    </Router>
+  );
+}
+
+function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App bg-black text-zinc-100 min-h-screen">
-          <Header cartCount={cartItems.length} />
-          <main>
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <Home 
-                    cartItems={cartItems}
-                    onAddToCart={handleAddToCart}
-                    onClearCart={handleClearCart}
-                  />
-                } 
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/cart" element={<Cart cartItems={cartItems} onRemoveFromCart={handleRemoveFromCart} />} />
-              <Route path="/checkout" element={
-                <ProtectedRoute>
-                  <Checkout cartItems={cartItems} onClearCart={handleClearCart} />
-                </ProtectedRoute>
-              } />
-              <Route path="/products" element={<ProductsPage onAddToCart={handleAddToCart} />} />
-              <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
-              <Route path="/pets" element={<PetsPage onAddToCart={handleAddToCart} />} />
-              <Route path="/pets/:id" element={<PetDetailPage onAddToCart={handleAddToCart} />} />
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
-              } />
-              <Route path="/orders/:id" element={
-                <ProtectedRoute>
-                  <OrderDetailPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/*" element={
-                <AdminRoute>
-                  <Admin />
-                </AdminRoute>
-              } />
-              <Route path="/addresses" element={
-                <ProtectedRoute>
-                  <Addresses />
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </main>
-        </div>
-      </Router>
+      <AppRoutes />
     </AuthProvider>
   );
 }

@@ -32,6 +32,9 @@ const AdminProducts = () => {
   const [form, setForm] = useState(defaultForm);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const { toasts, addToast, removeToast } = useAdminToast();
   const location = useLocation();
 
@@ -39,6 +42,14 @@ const AdminProducts = () => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -51,7 +62,8 @@ const AdminProducts = () => {
     setLoading(true);
     setError('');
     try {
-      const [productsRes, categoriesRes] = await Promise.all([axios.get('/products/'), axios.get('/categories/')]);
+      const productsRes = await axios.get('/products/');
+      const categoriesRes = await axios.get('/categories/');
       setProducts(productsRes.data || []);
       setCategories(categoriesRes.data || []);
     } catch (err) {
@@ -78,6 +90,8 @@ const AdminProducts = () => {
   const openForm = () => {
     setEditingItem(null);
     setForm(defaultForm);
+    setSelectedImageFile(null);
+    setImagePreviewUrl('');
     setShowForm(true);
   };
 
@@ -94,7 +108,24 @@ const AdminProducts = () => {
       image_url: product.images?.[0]?.image_url || '',
       is_active: product.is_active ?? true,
     });
+    setSelectedImageFile(null);
+    setImagePreviewUrl('');
     setShowForm(true);
+  };
+
+  const uploadImageFile = async () => {
+    if (!selectedImageFile) return null;
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', selectedImageFile);
+
+    setImageUploading(true);
+    try {
+      const response = await axios.post('/upload/upload-image', uploadFormData);
+      return response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleCreateOrUpdate = async (e) => {
@@ -114,34 +145,46 @@ const AdminProducts = () => {
       return;
     }
 
+    let imageUrl = form.image_url || '';
+    if (selectedImageFile) {
+      const uploadedUrl = await uploadImageFile();
+      if (!uploadedUrl) {
+        throw new Error('Image upload failed.');
+      }
+      imageUrl = uploadedUrl;
+    }
+
     const payload = {
       name: form.name,
       brand: form.brand,
-      category_id: Number(form.category_id),
+      category_id: form.category_id,
       short_description: form.short_description,
       is_active: form.is_active,
-      variants: [
+    };
+
+    if (!editingItem) {
+      payload.variants = [
         {
           sku: form.sku,
           price: Number(form.price),
           stock: Number(form.stock),
         },
-      ],
-      images: [
+      ];
+      payload.images = [
         {
-          image_url: form.image_url || '',
+          image_url: imageUrl,
           is_primary: true,
         },
-      ],
-      details: {
+      ];
+      payload.details = {
         ingredients_material: '',
         pet_species_tags: [],
         lifestyle_tags: [],
         weight: '',
         flavor: '',
         expiry_date: null,
-      },
-    };
+      };
+    }
 
     try {
       if (editingItem) {
@@ -157,12 +200,22 @@ const AdminProducts = () => {
       await loadData();
     } catch (err) {
       const status = err.response?.status;
+      let errorMessage = err.message;
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          errorMessage = err.response.data.detail.map(d => `${d.loc.join('.')}: ${d.msg}`).join(', ');
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        } else {
+          errorMessage = JSON.stringify(err.response.data.detail);
+        }
+      }
       const message =
         status === 401 || status === 403
           ? 'Session expired. Please log out and log in again.'
           : status === 404
           ? `Endpoint not found: ${err.config?.url}`
-          : `Failed to save: ${err.response?.data?.detail || err.message}`;
+          : `Failed to save: ${errorMessage}`;
       setError(message);
       addToast(message, 'error');
     } finally {
@@ -401,6 +454,25 @@ const AdminProducts = () => {
                 </div>
               )}
               <div className="space-y-2">
+                <label className="text-sm text-zinc-300">Upload Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setSelectedImageFile(file);
+                    if (file) {
+                      const previewUrl = URL.createObjectURL(file);
+                      setImagePreviewUrl(previewUrl);
+                    } else {
+                      setImagePreviewUrl('');
+                    }
+                  }}
+                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-zinc-500">Pick a file to upload and automatically populate the image URL.</p>
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm text-zinc-300">Image URL</label>
                 <input
                   value={form.image_url}
@@ -408,10 +480,18 @@ const AdminProducts = () => {
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
               </div>
-              {form.image_url && (
+              {((selectedImageFile && imagePreviewUrl) || form.image_url) && (
                 <div className="flex items-center gap-3 rounded-2xl border border-[#2A2A2A] bg-[#000000] p-3">
-                  <img src={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                  <p className="text-sm text-zinc-300">Image preview</p>
+                  <img
+                    src={selectedImageFile ? imagePreviewUrl : form.image_url}
+                    alt="preview"
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="text-sm text-zinc-300">Image preview</p>
+                    {selectedImageFile && <p className="text-xs text-zinc-500">{selectedImageFile.name}</p>}
+                    {imageUploading && <p className="text-xs text-blue-400">Uploading image…</p>}
+                  </div>
                 </div>
               )}
               <div className="flex items-center gap-3">

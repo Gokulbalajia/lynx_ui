@@ -9,6 +9,7 @@ const OrderDetailPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState(null);
+  const [shipmentStatus, setShipmentStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -23,7 +24,14 @@ const OrderDetailPage = () => {
       setError('');
       try {
         const response = await axios.get(`/orders/${id}`);
-        setOrder(response.data);
+        const orderData = response.data;
+        setOrder(orderData);
+        try {
+          const shipmentRes = await axios.get(`/shipments/${id}`);
+          setShipmentStatus(shipmentRes.data?.shipment_status || '');
+        } catch (shipmentErr) {
+          console.warn('Unable to load shipment status', shipmentErr.response?.data || shipmentErr);
+        }
       } catch (err) {
         setError(err.response?.data?.detail || 'Unable to load order details.');
       } finally {
@@ -136,7 +144,7 @@ const OrderDetailPage = () => {
                   </div>
                   <div className="rounded-3xl border border-[#2A2A2A] p-4">
                     <p className="text-zinc-400 text-xs uppercase tracking-[0.3em]">Shipping</p>
-                    <p className="mt-2 text-white font-semibold">{order.shipment_status || 'Pending'}</p>
+                    <p className="mt-2 text-white font-semibold">{shipmentStatus || order.shipment_status || 'Pending'}</p>
                   </div>
                 </div>
               </div>

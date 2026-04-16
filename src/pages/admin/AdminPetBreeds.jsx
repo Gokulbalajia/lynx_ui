@@ -32,7 +32,8 @@ const AdminPetBreeds = () => {
     setLoading(true);
     setError('');
     try {
-      const [breedsRes, typesRes] = await Promise.all([axios.get('/pet-breeds/'), axios.get('/pet-types/')]);
+      const breedsRes = await axios.get('/pet-breeds/');
+      const typesRes = await axios.get('/pet-types/');
       setBreeds(breedsRes.data || []);
       setPetTypes(typesRes.data || []);
     } catch (err) {
@@ -109,12 +110,22 @@ const AdminPetBreeds = () => {
       await loadData();
     } catch (err) {
       const status = err.response?.status;
+      let errorMessage = err.message;
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          errorMessage = err.response.data.detail.map(d => `${d.loc.join('.')}: ${d.msg}`).join(', ');
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        } else {
+          errorMessage = JSON.stringify(err.response.data.detail);
+        }
+      }
       const message =
         status === 401 || status === 403
           ? 'Session expired. Please log out and log in again.'
           : status === 404
           ? `Endpoint not found: ${err.config?.url}`
-          : `Failed to save: ${err.response?.data?.detail || err.message}`;
+          : `Failed to save: ${errorMessage}`;
       setError(message);
       addToast(message, 'error');
     } finally {
@@ -223,13 +234,6 @@ const AdminPetBreeds = () => {
                           className="inline-flex items-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-600/10 px-3 py-2 text-blue-300 hover:bg-blue-600/20"
                         >
                           <Pencil size={14} /> Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(breed)}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-600/10 px-3 py-2 text-red-300 hover:bg-red-600/20"
-                        >
-                          <Trash2 size={14} /> Delete
                         </button>
                       </div>
                     </td>

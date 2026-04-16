@@ -12,6 +12,7 @@ const Checkout = ({ cartItems, onClearCart }) => {
   const [error, setError] = useState('');
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [newAddress, setNewAddress] = useState({ street: '', city: '', state: '', pincode: '', country: '' });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('UPI');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -86,7 +87,17 @@ const Checkout = ({ cartItems, onClearCart }) => {
           price: item.price || 0,
         })),
       };
-      await axios.post('/orders/checkout', orderPayload);
+      const orderRes = await axios.post('/orders/checkout', orderPayload);
+      const orderId = orderRes.data?.id;
+      if (!orderId) {
+        throw new Error('Order created but no order ID returned.');
+      }
+      await axios.post('/payments/', {
+        order_id: orderId,
+        payment_method: selectedPaymentMethod,
+        transaction_id: `TXN-${Date.now()}`,
+        payment_status: 'Paid',
+      });
       onClearCart();
       navigate('/orders');
     } catch (err) {
@@ -251,6 +262,18 @@ const Checkout = ({ cartItems, onClearCart }) => {
               ))}
             </div>
             <div className="rounded-3xl border border-zinc-800 p-6 bg-zinc-950">
+              <div className="flex items-center justify-between text-zinc-400 mb-3">
+                <span>Payment Method</span>
+                <select
+                  value={selectedPaymentMethod}
+                  onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-white outline-none"
+                >
+                  <option value="UPI">UPI</option>
+                  <option value="Card">Card</option>
+                  <option value="COD">COD</option>
+                </select>
+              </div>
               <div className="flex items-center justify-between text-zinc-400 mb-3">
                 <span>Subtotal</span>
                 <span>₹{total.toLocaleString('en-IN')}</span>

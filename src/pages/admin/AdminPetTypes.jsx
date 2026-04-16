@@ -215,13 +215,6 @@ const AdminPetTypes = () => {
                         >
                           <Pencil size={14} /> Edit
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(typeItem)}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-600/10 px-3 py-2 text-red-300 hover:bg-red-600/20"
-                        >
-                          <Trash2 size={14} /> Delete
-                        </button>
                       </div>
                     </td>
                   </tr>

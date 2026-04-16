@@ -2,7 +2,7 @@ import React from 'react';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Cart = ({ cartItems, onRemoveFromCart }) => {
+const Cart = ({ cartItems, onRemoveFromCart, onUpdateQuantity }) => {
   const total = cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
 
   return (
@@ -28,13 +28,30 @@ const Cart = ({ cartItems, onRemoveFromCart }) => {
                     <div className="flex-1">
                       <h2 className="text-lg font-semibold text-white">{item.name}</h2>
                       <p className="text-zinc-400 text-sm">Category: {item.category}</p>
-                      <p className="text-zinc-400 text-sm">Quantity: {item.quantity || 1}</p>
+                      <div className="mt-2 flex items-center gap-3 text-sm text-zinc-300">
+                        <span>Quantity:</span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity?.(item.cart_item_id || item.id, item.item_type, (item.quantity || 1) - 1)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800 transition"
+                        >
+                          −
+                        </button>
+                        <span className="min-w-[36px] text-center">{item.quantity || 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateQuantity?.(item.cart_item_id || item.id, item.item_type, (item.quantity || 1) + 1)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800 transition"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                     <div className="text-right flex flex-col items-end gap-2">
                       <p className="text-white font-bold">₹{item.price.toLocaleString('en-IN')}</p>
                       <button
                         type="button"
-                        onClick={() => onRemoveFromCart?.(item.id, item.item_type)}
+                        onClick={() => onRemoveFromCart?.(item.cart_item_id || item.id, item.item_type)}
                         className="text-sm text-red-400 hover:text-red-300"
                       >
                         Remove

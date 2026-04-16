@@ -93,14 +93,16 @@ const PetCard = ({ pet, onAddToCart }) => {
                 return;
               }
 
+              let cartItemId = null;
               try {
-                await axios.post('/cart/', {
+                const response = await axios.post('/cart/', {
                   item_type: 'pet',
                   pet_id: pet.id,
                   product_variant_id: null,
                   quantity: 1,
-                  user_id: currentUserId
+                  user_id: currentUserId,
                 });
+                cartItemId = response?.data?.id || null;
               } catch (error) {
                 console.error('Failed to add pet to cart', error.response?.data || error);
               }
@@ -109,6 +111,7 @@ const PetCard = ({ pet, onAddToCart }) => {
                 item_type: 'pet',
                 pet_id: pet.id,
                 id: pet.id,
+                cart_item_id: cartItemId,
                 name: pet.name,
                 img: primaryImage?.image_url || '',
                 price: parseFloat(pet.price),
@@ -134,30 +137,54 @@ const PetCard = ({ pet, onAddToCart }) => {
 
 const PetsPage = ({ onAddToCart }) => {
   const [pets, setPets] = useState([]);
+  const [petBreeds, setPetBreeds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     type: 'All',
     gender: 'All',
+    breedId: 'All',
     availableOnly: false,
     sortBy: 'name'
   });
 
   useEffect(() => {
-    const fetchPets = async () => {
+    const fetchBreeds = async () => {
       try {
-        const response = await axios.get('/pets/');
+        const response = await axios.get('/pet-breeds/');
+        setPetBreeds(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error('Failed to fetch pet breeds:', error);
+      }
+    };
+
+    fetchBreeds();
+  }, []);
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (filters.breedId && filters.breedId !== 'All') {
+          params.breed_id = filters.breedId;
+        }
+        const response = await axios.get('/pets/', { params });
         if (Array.isArray(response.data)) {
           setPets(response.data);
         }
+        setError('');
       } catch (error) {
         console.error('Failed to fetch pets:', error);
+        setError('Unable to load pets. Please try again.');
+        setPets([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPets();
-  }, []);
+  }, [filters.breedId]);
 
   const filteredAndSortedPets = useMemo(() => {
     let filtered = pets.filter(pet => {
@@ -235,6 +262,17 @@ const PetsPage = ({ onAddToCart }) => {
               ))}
             </div>
 
+            {/* Breed Dropdown */}
+            <select
+              value={filters.breedId}
+              onChange={(e) => handleFilterChange('breedId', e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
+            >
+              <option value="All">All breeds</option>
+              {petBreeds.map((breed) => (
+                <option key={breed.id} value={breed.id}>{breed.name}</option>
+              ))}
+            </select>
             {/* Sort Dropdown */}
             <select
               value={filters.sortBy}
@@ -268,6 +306,39 @@ const PetsPage = ({ onAddToCart }) => {
           <h1 className="text-4xl font-black text-white mb-2">Find Your Perfect Pet</h1>
           <p className="text-zinc-500">Browse our collection of adorable pets waiting for their forever homes.</p>
         </div>
+
+        {error && (
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-4 mb-6 text-sm text-red-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                setLoading(true);
+                const retry = async () => {
+                  try {
+                    const params = {};
+                    if (filters.breedId && filters.breedId !== 'All') {
+                      params.breed_id = filters.breedId;
+                    }
+                    const response = await axios.get('/pets/', { params });
+                    if (Array.isArray(response.data)) {
+                      setPets(response.data);
+                    }
+                  } catch (error) {
+                    setError('Unable to load pets. Please try again.');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                retry();
+              }}
+              className="inline-flex items-center justify-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 transition"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

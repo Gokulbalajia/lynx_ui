@@ -119,14 +119,16 @@ const ProductDetailPage = ({ onAddToCart }) => {
       return;
     }
 
+    let cartItemId = null;
     try {
-      await axios.post('/cart/', {
+      const response = await axios.post('/cart/', {
         item_type: 'product',
         product_variant_id: selectedVariant.id,
         pet_id: null,
         quantity,
         user_id: currentUserId
       });
+      cartItemId = response?.data?.id || null;
     } catch (error) {
       console.error('Failed to add product to cart', error.response?.data || error);
     }
@@ -135,6 +137,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
       item_type: 'product',
       product_variant_id: selectedVariant.id,
       id: product.id,
+      cart_item_id: cartItemId,
       name: product.name,
       img: product.images?.[0]?.image_url || '',
       price: parseFloat(selectedVariant.price || '0'),

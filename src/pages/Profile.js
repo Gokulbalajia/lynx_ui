@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const Profile = () => {
   const { isAuthenticated, user } = useAuth();
+  const [apiUser, setApiUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await axios.get('/users/me');
+        setApiUser(response.data);
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Unable to fetch profile details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [isAuthenticated]);
+
+  const currentUser = apiUser || user;
+
   return (
     <div className="min-h-screen bg-black pt-8">
       <div className="container mx-auto px-6">
@@ -21,12 +50,19 @@ const Profile = () => {
 
           {isAuthenticated ? (
             <div className="space-y-6">
+              {error && (
+                <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                  {error}
+                </div>
+              )}
               <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
                 <h2 className="text-xl font-semibold text-white">Account Details</h2>
                 <div className="mt-4 space-y-3 text-zinc-300">
-                  <p><span className="font-semibold text-white">Name:</span> {user?.name || 'Customer'}</p>
-                  <p><span className="font-semibold text-white">Email:</span> {user?.email || 'Not available'}</p>
-                  <p><span className="font-semibold text-white">Phone:</span> {user?.phone || 'Not provided'}</p>
+                  <p><span className="font-semibold text-white">Name:</span> {currentUser?.name || 'Customer'}</p>
+                  <p><span className="font-semibold text-white">Email:</span> {currentUser?.email || 'Not available'}</p>
+                  <p><span className="font-semibold text-white">Phone:</span> {currentUser?.phone || 'Not provided'}</p>
+                  <p><span className="font-semibold text-white">Member since:</span> {currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'Unknown'}</p>
+                  <p><span className="font-semibold text-white">Last updated:</span> {currentUser?.updated_at ? new Date(currentUser.updated_at).toLocaleDateString() : 'Unknown'}</p>
                 </div>
               </div>
               <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">

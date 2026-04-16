@@ -65,6 +65,7 @@ const ProductsPage = ({ onAddToCart }) => {
   const [variantSelection, setVariantSelection] = useState({});
   const [addingToCartId, setAddingToCartId] = useState(null);
   const [cartStatus, setCartStatus] = useState({ text: '', type: '', productId: null });
+  const [error, setError] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -97,23 +98,35 @@ const ProductsPage = ({ onAddToCart }) => {
   }, [categories, searchParams]);
 
   useEffect(() => {
-    const fetchAll = async () => {
-      setLoadingProducts(true);
-      try {
-        const params = {};
-        if (selectedCategoryIds.length === 1 && selectedCategoryIds[0]) {
-          params.category_id = selectedCategoryIds[0];
-        }
-        const res = await axios.get('/products/', { params });
-        setAllProducts(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error('Products fetch failed:', err);
-        setAllProducts([]);
-      } finally {
-        setLoadingProducts(false);
+    const query = searchParams.get('search') || '';
+    setSearchQuery(query);
+  }, [searchParams]);
+
+  const loadProducts = async () => {
+    setLoadingProducts(true);
+    setError('');
+    try {
+      const params = {};
+      if (selectedCategoryIds.length === 1 && selectedCategoryIds[0]) {
+        params.category_id = selectedCategoryIds[0];
       }
-    };
-    fetchAll();
+      const res = await axios.get('/products/', { params });
+      setAllProducts(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      const message =
+        err.response?.data?.detail ||
+        err.message ||
+        'Unable to load products. Please try again.';
+      console.error('Products fetch failed:', err);
+      setError(message);
+      setAllProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
   }, [selectedCategoryIds]);
 
   useEffect(() => {
@@ -266,14 +279,17 @@ const ProductsPage = ({ onAddToCart }) => {
     let cartSynced = false;
 
     try {
-      await axios.post('/cart/', {
+      const response = await axios.post('/cart/', {
         item_type: 'product',
         product_variant_id: variant.id,
         pet_id: null,
         quantity: 1,
         user_id: currentUserId
       });
-      cartSynced = true;
+      if (response?.data?.id) {
+        cartSynced = true;
+        variant.cart_item_id = response.data.id;
+      }
     } catch (error) {
       console.error('Cart sync failed, falling back to local cart', error.response?.data || error);
     }
@@ -282,6 +298,7 @@ const ProductsPage = ({ onAddToCart }) => {
       item_type: 'product',
       product_variant_id: variant.id,
       id: product.id,
+      cart_item_id: variant.cart_item_id || null,
       name: product.name,
       img: product.images?.[0]?.image_url || '',
       price: parseFloat(variant.price || '0'),
@@ -342,6 +359,19 @@ const ProductsPage = ({ onAddToCart }) => {
             <Filter size={18} /> Filters
           </button>
         </div>
+
+        {error && (
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-4 mb-6 text-sm text-red-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={loadProducts}
+              className="inline-flex items-center justify-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 transition"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="hidden lg:block rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sticky top-24 self-start h-fit">

@@ -33,6 +33,7 @@ const formatAge = (months) => {
 const AdminPets = () => {
   const [pets, setPets] = useState([]);
   const [petTypes, setPetTypes] = useState([]);
+  const [petBreeds, setPetBreeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -40,6 +41,9 @@ const AdminPets = () => {
   const [form, setForm] = useState(defaultForm);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const { toasts, addToast, removeToast } = useAdminToast();
 
   useEffect(() => {
@@ -47,13 +51,24 @@ const AdminPets = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      const [petsRes, typesRes] = await Promise.all([axios.get('/pets/'), axios.get('/pet-types/')]);
+      const petsRes = await axios.get('/pets/');
+      const typesRes = await axios.get('/pet-types/');
+      const breedsRes = await axios.get('/pet-breeds/');
       setPets(petsRes.data || []);
       setPetTypes(typesRes.data || []);
+      setPetBreeds(breedsRes.data || []);
     } catch (err) {
       const status = err.response?.status;
       const message =
@@ -76,6 +91,8 @@ const AdminPets = () => {
   const openForm = () => {
     setEditingItem(null);
     setForm(defaultForm);
+    setSelectedImageFile(null);
+    setImagePreviewUrl('');
     setShowForm(true);
   };
 
@@ -93,7 +110,24 @@ const AdminPets = () => {
       image_url: pet.images?.[0]?.image_url || '',
       is_available: pet.is_available ?? true,
     });
+    setSelectedImageFile(null);
+    setImagePreviewUrl('');
     setShowForm(true);
+  };
+
+  const uploadImageFile = async () => {
+    if (!selectedImageFile) return null;
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', selectedImageFile);
+
+    setImageUploading(true);
+    try {
+      const response = await axios.post('/upload/upload-image', uploadFormData);
+      return response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleCreateOrUpdate = async (e) => {
@@ -113,6 +147,15 @@ const AdminPets = () => {
       return;
     }
 
+    let imageUrl = form.image_url || '';
+    if (selectedImageFile) {
+      const uploadedUrl = await uploadImageFile();
+      if (!uploadedUrl) {
+        throw new Error('Image upload failed.');
+      }
+      imageUrl = uploadedUrl;
+    }
+
     const payload = {
       name: form.name,
       pet_type_id: form.pet_type_id,
@@ -123,13 +166,16 @@ const AdminPets = () => {
       stock: Number(form.stock),
       description: form.description,
       is_available: form.is_available,
-      images: [
+    };
+
+    if (!editingItem) {
+      payload.images = [
         {
-          image_url: form.image_url || '',
+          image_url: imageUrl,
           is_primary: true,
         },
-      ],
-    };
+      ];
+    }
 
     try {
       if (editingItem) {
@@ -145,12 +191,22 @@ const AdminPets = () => {
       await loadData();
     } catch (err) {
       const status = err.response?.status;
+      let errorMessage = err.message;
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          errorMessage = err.response.data.detail.map(d => `${d.loc.join('.')}: ${d.msg}`).join(', ');
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        } else {
+          errorMessage = JSON.stringify(err.response.data.detail);
+        }
+      }
       const message =
         status === 401 || status === 403
           ? 'Session expired. Please log out and log in again.'
           : status === 404
           ? `Endpoint not found: ${err.config?.url}`
-          : `Failed to save: ${err.response?.data?.detail || err.message}`;
+          : `Failed to save: ${errorMessage}`;
       setError(message);
       addToast(message, 'error');
     } finally {
@@ -339,12 +395,21 @@ const AdminPets = () => {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Breed ID</label>
-                  <input
+                  <label className="text-sm text-zinc-300">Breed</label>
+                  <select
                     value={form.breed_id}
                     onChange={(e) => setForm({ ...form, breed_id: e.target.value })}
                     className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                  />
+                  >
+                    <option value="">Select breed</option>
+                    {petBreeds
+                      .filter((breed) => !form.pet_type_id || breed.pet_type_id === form.pet_type_id)
+                      .map((breed) => (
+                        <option key={breed.id} value={breed.id}>
+                          {breed.name}
+                        </option>
+                      ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-zinc-300">Gender *</label>
@@ -394,6 +459,25 @@ const AdminPets = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Upload Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setSelectedImageFile(file);
+                      if (file) {
+                        const previewUrl = URL.createObjectURL(file);
+                        setImagePreviewUrl(previewUrl);
+                      } else {
+                        setImagePreviewUrl('');
+                      }
+                    }}
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <p className="text-xs text-zinc-500">Select an image file to upload it automatically.</p>
+                </div>
+                <div className="space-y-2">
                   <label className="text-sm text-zinc-300">Image URL</label>
                   <input
                     value={form.image_url}
@@ -402,10 +486,18 @@ const AdminPets = () => {
                   />
                 </div>
               </div>
-              {form.image_url && (
+              {((selectedImageFile && imagePreviewUrl) || form.image_url) && (
                 <div className="flex items-center gap-3 rounded-2xl border border-[#2A2A2A] bg-[#000000] p-3">
-                  <img src={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                  <p className="text-sm text-zinc-300">Image preview</p>
+                  <img
+                    src={selectedImageFile ? imagePreviewUrl : form.image_url}
+                    alt="preview"
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="text-sm text-zinc-300">Image preview</p>
+                    {selectedImageFile && <p className="text-xs text-zinc-500">{selectedImageFile.name}</p>}
+                    {imageUploading && <p className="text-xs text-blue-400">Uploading image…</p>}
+                  </div>
                 </div>
               )}
               <div className="space-y-2">

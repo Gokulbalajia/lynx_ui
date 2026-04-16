@@ -37,13 +37,11 @@ const AdminDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const [ordersRes, productsRes, petsRes, categoriesRes, breedsRes] = await Promise.all([
-        axios.get('/orders/admin/all'),
-        axios.get('/products/'),
-        axios.get('/pets/'),
-        axios.get('/categories/'),
-        axios.get('/pet-breeds/'),
-      ]);
+      const ordersRes = await axios.get('/orders/admin/all');
+      const productsRes = await axios.get('/products/');
+      const petsRes = await axios.get('/pets/');
+      const categoriesRes = await axios.get('/categories/');
+      const breedsRes = await axios.get('/pet-breeds/');
       setStats({
         orders: ordersRes.data?.length || 0,
         products: productsRes.data?.length || 0,
