@@ -17,6 +17,19 @@ import Checkout from './pages/Checkout';
 import Addresses from './pages/Addresses';
 import OrderDetailPage from './pages/OrderDetailPage';
 import Admin from './pages/Admin';
+import AboutPage from './pages/AboutPage';
+import CareersPage from './pages/CareersPage';
+import PressPage from './pages/PressPage';
+import BlogPage from './pages/BlogPage';
+import HelpPage from './pages/HelpPage';
+import ShippingInfoPage from './pages/ShippingInfoPage';
+import ReturnsPage from './pages/ReturnsPage';
+import TrackOrderPage from './pages/TrackOrderPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import ShippingPolicyPage from './pages/ShippingPolicyPage';
+import ReturnPolicyPage from './pages/ReturnPolicyPage';
+import SitemapPage from './pages/SitemapPage';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -178,6 +191,19 @@ function AppRoutes() {
             <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
             <Route path="/pets" element={<PetsPage onAddToCart={handleAddToCart} />} />
             <Route path="/pets/:id" element={<PetDetailPage onAddToCart={handleAddToCart} />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/careers" element={<CareersPage />} />
+            <Route path="/press" element={<PressPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/shipping-info" element={<ShippingInfoPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
+            <Route path="/track-order" element={<TrackOrderPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+            <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+            <Route path="/return-policy" element={<ReturnPolicyPage />} />
+            <Route path="/sitemap" element={<SitemapPage />} />
             <Route path="/orders" element={
               <ProtectedRoute>
                 <Orders />

@@ -26,6 +26,12 @@ const PRICE_MAX = 5000;
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${process.env.REACT_APP_API_URL || 'https://pet-shop-api-t1hm.onrender.com'}${url}`;
+};
+
 const getLowestVariantPrice = (product) => {
   const prices = product.variants?.map((variant) => parseFloat(variant.price || 0)) || [0];
   return Math.min(...prices);
@@ -519,7 +525,7 @@ const ProductsPage = ({ onAddToCart }) => {
                       <Link to={`/products/${product.id}`} className="block relative overflow-hidden bg-zinc-800 h-[260px]">
                         {product.images?.length > 0 ? (
                           <img
-                            src={product.images.find((image) => image.is_primary)?.image_url || product.images[0].image_url}
+                            src={getImageUrl(product.images.find((image) => image.is_primary)?.image_url || product.images[0].image_url)}
                             alt={product.name}
                             className="w-full h-full object-cover transition duration-500 hover:scale-105"
                           />

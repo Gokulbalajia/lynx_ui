@@ -6,6 +6,12 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Copy, MessageCircle, Star,
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${process.env.REACT_APP_API_URL || 'https://pet-shop-api-t1hm.onrender.com'}${url}`;
+};
+
 const formatExpiry = (expiryDate) => {
   if (!expiryDate) return 'No expiry';
   const date = new Date(expiryDate);
@@ -196,7 +202,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
               className="relative overflow-hidden rounded-3xl bg-zinc-900 cursor-pointer"
               onClick={() => setLightboxOpen(true)}
             >
-              <img src={mainImage.image_url} alt={product.name} className="w-full h-[480px] object-cover transition duration-500 hover:scale-[1.03]" />
+              <img src={getImageUrl(mainImage.image_url)} alt={product.name} className="w-full h-[480px] object-cover transition duration-500 hover:scale-[1.03]" />
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {images.map((image, index) => (
@@ -206,7 +212,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
                   onClick={() => setMainImageIndex(index)}
                   className={`flex-shrink-0 h-20 w-28 overflow-hidden rounded-2xl border ${index === mainImageIndex ? 'border-blue-500' : 'border-zinc-800'} bg-zinc-900`}
                 >
-                  <img src={image.image_url} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                  <img src={getImageUrl(image.image_url)} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -430,7 +436,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
                 >
                   <div className="h-40 overflow-hidden bg-zinc-800">
                     <img
-                      src={related.images?.find((img) => img.is_primary)?.image_url || related.images?.[0]?.image_url || '/images/placeholder.jpg'}
+                      src={getImageUrl(related.images?.find((img) => img.is_primary)?.image_url || related.images?.[0]?.image_url || '/images/placeholder.jpg')}
                       alt={related.name}
                       className="h-full w-full object-cover"
                     />

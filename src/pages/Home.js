@@ -3,27 +3,27 @@ import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, CheckCircle2, CreditCard, Truck, X, Mail, MapPin, Phone, ExternalLink, Camera, Globe, Heart } from 'lucide-react';
 
 const PET_CATEGORIES = [
-  { id: 'dog', name: 'Dog', image: '/images/pexels-hnoody93-58997.jpg' },
-  { id: 'cat', name: 'Cat', image: '/images/cat-7094808_1280.jpg' },
-  { id: 'fish', name: 'Fish', image: '/images/make-realistic-colourful-fish-swimming-gracefully-tranquil-underwater-garden-photo-realist_1098360-2533.png' },
-  { id: 'rabbit', name: 'Rabbit', image: '/images/white-hotot-rabbit-eating-grass-509265984-5c0da06546e0fb0001366ac0.jpg' },
-  { id: 'bird', name: 'Bird', image: '/images/popugai-pticy-zhivotnye-31997.jpg' }
+  { id: 'dog', name: 'Dog', image: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/c41d3e1d-2a21-47bf-a78d-a57e4e65f364_pexels-hnoody93-58997.jpg' },
+  { id: 'cat', name: 'Cat', image: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/bc166611-53b2-4110-82c2-b6e42f1ac04e_cat-7094808_1280.jpg' },
+  { id: 'fish', name: 'Fish', image: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/5ae154b4-8af3-4f37-af59-82d91418ee19_make-realistic-colourful-fish-swimming-gracefully-tranquil-underwater-garden-photo-realist_1098360-2533.png' },
+  { id: 'rabbit', name: 'Rabbit', image: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/b436c2cd-4df1-41b3-8e5c-f6dfc18756d4_white-hotot-rabbit-eating-grass-509265984-5c0da06546e0fb0001366ac0.jpg' },
+  { id: 'bird', name: 'Bird', image: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/1bb8fb94-f631-461c-8f06-2d9b3e913b0b_popugai-pticy-zhivotnye-31997.jpg' }
 ];
 
 const HERO_SLIDES = [
-  { id: 1, title: "Premium Dog Nutrition", subtitle: "Give your best friend the best fuel.", img: "/images/493584.jpg", color: "from-blue-600" },
+  { id: 1, title: "Premium Dog Nutrition", subtitle: "Give your best friend the best fuel.", img: "https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/4b1ca721-e79f-4e40-bb28-c609e958e060_493584.jpg", color: "from-blue-600" },
   { id: 2, title: "Cozy Cat Kingdoms", subtitle: "Comfortable beds for your feline royalty.", img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1200", color: "from-purple-600" },
   { id: 3, title: "Aquarium Essentials", subtitle: "Everything for a vibrant underwater world.", img: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&q=80&w=1200", color: "from-teal-600" },
-  { id: 4, title: "Happy Bunny Haven", subtitle: "Everything your rabbit needs for a cozy and playful life.", img: "/images/2962543.jpg", color: "from-teal-600" },
-  { id: 5, title: "Feathered Friends Paradise", subtitle: "All essentials to keep your birds happy, active, and chirping.", img: "/images/776717-lovebirds-wallpaper-1920x1080-for-full-hd.jpg", color: "from-teal-600"},
+  { id: 4, title: "Happy Bunny Haven", subtitle: "Everything your rabbit needs for a cozy and playful life.", img: "https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/83603478-ded3-4ce9-b481-b5c6920fd638_2962543.jpg", color: "from-teal-600" },
+  { id: 5, title: "Feathered Friends Paradise", subtitle: "All essentials to keep your birds happy, active, and chirping.", img: "https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/33550020-8199-4f88-8cd5-be6a3e48a571_776717-lovebirds-wallpaper-1920x1080-for-full-hd.jpg", color: "from-teal-600"},
 ];
 
 const AVAILABLE_PETS = [
-  { id: 'pet-1', name: 'Golden Retriever Puppy', price: 24999, category: 'Dog', img: '/images/dog-puppy.jpg' },
-  { id: 'pet-2', name: 'Siamese Kitten', price: 21999, category: 'Cat', img: '/images/siamese-kitten.jpg' },
-  { id: 'pet-3', name: 'Betta Fish', price: 899, category: 'Fish', img: '/images/betta-fish.jpg' },
-  { id: 'pet-4', name: 'Mini Lop Bunny', price: 15999, category: 'Rabbit', img: '/images/rabbit-pet.jpg' },
-  { id: 'pet-5', name: 'Parakeet Pair', price: 4999, category: 'Bird', img: '/images/bird-pair.jpg' },
+  { id: 'pet-1', name: 'Golden Retriever Puppy', price: 24999, category: 'Dog', img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/d457576b-c968-4831-b071-b5212f3d493d_golden-retriever-cute-dogs.png' },
+  { id: 'pet-2', name: 'Siamese Kitten', price: 21999, category: 'Cat', img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/547b5d5d-0ef0-4a80-b34c-10fd20a9b50d_OIP.jpg' },
+  { id: 'pet-3', name: 'Betta Fish', price: 899, category: 'Fish', img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/010023b4-43ec-477e-9dfe-e2500812516c_OIP%20(2).jpg' },
+  { id: 'pet-4', name: 'Mini Lop Bunny', price: 15999, category: 'Rabbit', img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/c48c3b68-a72d-4829-a244-0ae08eb6d40e_OIP%20(3).jpg' },
+  { id: 'pet-5', name: 'Parakeet Pair', price: 4999, category: 'Bird', img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/5ae59bc7-94b8-4ba9-b98f-6ce5ade6b4bf_pexels-diogo-miranda-2044514-20331914.jpg' },
 ];
 
 const ProductCard = ({ product, onAddToCart, linkTo }) => (
@@ -221,39 +221,39 @@ const HeroCarousel = ({ onAddToCart }) => {
 const Home = ({ cartItems, onAddToCart, onClearCart }) => {
   const [mockCategories] = useState([
     // 🐶 DOG
-    { id: 1, category: 'dog', name: 'Food', price: 2499, img: '/images/Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 2, category: 'dog', name: 'Treats', price: 499, img: '/images/2Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 3, category: 'dog', name: 'Toys', price: 799, img: '/images/4Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 4, category: 'dog', name: 'Grooming', price: 1299, img: '/images/3Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 5, category: 'dog', name: 'Accessories', price: 599, img: '/images/5Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 6, category: 'dog', name: 'Beds', price: 4599, img: '/images/6Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
-    { id: 7, category: 'dog', name: 'Health', price: 899, img: '/images/7Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 1, category: 'dog', name: 'Food', price: 2499, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/a04c4bfd-dea8-40fe-8576-dc568f9ad398_Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 2, category: 'dog', name: 'Treats', price: 499, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/fb00a375-e6ef-4742-8855-a9e8ff8310c7_2Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 3, category: 'dog', name: 'Toys', price: 799, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/0b9952da-4db7-411c-b936-89b92163228a_4Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 4, category: 'dog', name: 'Grooming', price: 1299, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/5654cade-0b3d-4400-8d15-f9ba72ead66a_3Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 5, category: 'dog', name: 'Accessories', price: 599, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/a4c29cea-8290-454b-a718-3e5512c95811_5Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 6, category: 'dog', name: 'Beds', price: 4599, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/e799ee54-9c37-4a8f-a276-55fbb4e2bfca_6Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
+    { id: 7, category: 'dog', name: 'Health', price: 899, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/00b880d1-2caf-4077-a0d4-5eb81d14c498_7Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
 
     // 🐱 CAT
-    { id: 8, category: 'cat', name: 'Food', price: 1899, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (7).png' },
-    { id: 9, category: 'cat', name: 'Treats', price: 349, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (3).png' },
-    { id: 10, category: 'cat', name: 'Toys', price: 299, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (4).png' },
-    { id: 11, category: 'cat', name: 'Grooming', price: 999, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (5).png' },
-    { id: 12, category: 'cat', name: 'Accessories', price: 499, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (6).png' },
-    { id: 13, category: 'cat', name: 'Litter', price: 799, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (1).png' },
-    { id: 14, category: 'cat', name: 'Beds', price: 3299, img: '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh.png' },
+    { id: 8, category: 'cat', name: 'Food', price: 1899, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/bc6f9d42-8239-4edb-9d82-5e08dfb3a364_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(7).png' },
+    { id: 9, category: 'cat', name: 'Treats', price: 349, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/36a47644-7880-4d24-babf-294e674c8612_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(3).png' },
+    { id: 10, category: 'cat', name: 'Toys', price: 299, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/cc608918-50da-40b2-a034-ba41fbcffbf3_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(4).png' },
+    { id: 11, category: 'cat', name: 'Grooming', price: 999, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/fe749159-25a7-4831-96ac-c3b6b2e19e78_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(5).png' },
+    { id: 12, category: 'cat', name: 'Accessories', price: 499, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/31604b7c-0c1a-42a0-b1e9-b0577232453d_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(6).png' },
+    { id: 13, category: 'cat', name: 'Litter', price: 799, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/f17ab20e-4ed9-4ba6-8251-27bd331d8649_Gemini_Generated_Image_2wzhlj2wzhlj2wzh%20(1).png' },
+    { id: 14, category: 'cat', name: 'Beds', price: 3299, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/42430894-4476-4505-ba3e-3c84e7052673_Gemini_Generated_Image_2wzhlj2wzhlj2wzh.png' },
 
     // 🐟 FISH
     { id: 15, category: 'fish', name: 'Food', price: 299, img: 'https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=300' },
-    { id: 16, category: 'fish', name: 'Aquarium', price: 8999, img: '/images/FGemini_Generated_Image_dx17y1dx17y1dx17.png' },
-    { id: 17, category: 'fish', name: 'Accessories', price: 599, img: '/images/f1Gemini_Generated_Image_dx17y1dx17y1dx17.png' },
+    { id: 16, category: 'fish', name: 'Aquarium', price: 8999, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/0e439fcc-81c3-4d9c-94c4-265d66913821_FGemini_Generated_Image_dx17y1dx17y1dx17.png' },
+    { id: 17, category: 'fish', name: 'Accessories', price: 599, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/149950be-b8c5-4dc0-a85d-e17ac668bad3_f1Gemini_Generated_Image_dx17y1dx17y1dx17.png' },
 
     // 🐰 RABBIT
-    { id: 18, category: 'rabbit', name: 'Food', price: 699, img: '/images/fGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
-    { id: 19, category: 'rabbit', name: 'Toys', price: 399, img: '/images/Gemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
-    { id: 20, category: 'rabbit', name: 'Beds', price: 1299, img: '/images/bGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
-    { id: 21, category: 'rabbit', name: 'Cage', price: 7999, img: '/images/cGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
+    { id: 18, category: 'rabbit', name: 'Food', price: 699, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/6dcb5b67-5187-495e-8fd0-047e505cac62_fGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
+    { id: 19, category: 'rabbit', name: 'Toys', price: 399, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/a3c17f31-a8b5-489e-9154-7e833058e71a_Gemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
+    { id: 20, category: 'rabbit', name: 'Beds', price: 1299, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/e52a998a-7c57-495f-8563-be9119da4ec2_bGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
+    { id: 21, category: 'rabbit', name: 'Cage', price: 7999, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/0de04b46-ed81-4e7e-8c3b-fbdd75e03e25_cGemini_Generated_Image_xd5bcaxd5bcaxd5b.png' },
 
     // 🐦 BIRD
-    { id: 22, category: 'bird', name: 'Food', price: 450, img: '/images/Gemini_Generated_Image_19gho819gho819gh.png' },
-    { id: 23, category: 'bird', name: 'Toys', price: 299, img: '/images/tGemini_Generated_Image_19gho819gho819gh.png' },
-    { id: 24, category: 'bird', name: 'Cage', price: 5999, img: '/images/cGemini_Generated_Image_19gho819gho819gh.png' },
-    { id: 25, category: 'bird', name: 'Accessories', price: 399, img: '/images/aGemini_Generated_Image_19gho819gho819gh.png' },
+    { id: 22, category: 'bird', name: 'Food', price: 450, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/da2bac37-f7b6-440d-ab73-45324c82ff07_Gemini_Generated_Image_19gho819gho819gh.png' },
+    { id: 23, category: 'bird', name: 'Toys', price: 299, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/e4848a57-db34-400d-b58a-16d69f6ec511_tGemini_Generated_Image_19gho819gho819gh.png' },
+    { id: 24, category: 'bird', name: 'Cage', price: 5999, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/472e8297-7ee4-4226-ade8-3f08903e7617_cGemini_Generated_Image_19gho819gho819gh.png' },
+    { id: 25, category: 'bird', name: 'Accessories', price: 399, img: 'https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/fafe1b1f-7fc6-4f2f-b325-54db92000c97_aGemini_Generated_Image_19gho819gho819gh.png' },
   ]);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -294,7 +294,7 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
 
           <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 h-64 md:h-72">
             <img
-              src="/images/e9a15fad-2221-4b54-b7d1-d560a9053d98.jpg"
+              src="https://dhwoybaolyohjetxwkjk.supabase.co/storage/v1/object/public/petshop-images/images/ceaed826-daf2-48d3-8194-1548179230c1_e9a15fad-2221-4b54-b7d1-d560a9053d98.jpg"
               alt="Adopt a pet"
               className="w-full h-full object-cover"
             />
@@ -401,20 +401,36 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
           <div>
             <h4 className="text-white font-bold mb-6">Company</h4>
             <ul className="space-y-3 text-zinc-500 text-sm">
-              <li className="cursor-pointer hover:text-white">About Us</li>
-              <li className="cursor-pointer hover:text-white">Careers</li>
-              <li className="cursor-pointer hover:text-white">Press</li>
-              <li className="cursor-pointer hover:text-white">Blog</li>
+              <li>
+                <Link to="/about" className="block hover:text-white transition">About Us</Link>
+              </li>
+              <li>
+                <Link to="/careers" className="block hover:text-white transition">Careers</Link>
+              </li>
+              <li>
+                <Link to="/press" className="block hover:text-white transition">Press</Link>
+              </li>
+              <li>
+                <Link to="/blog" className="block hover:text-white transition">Blog</Link>
+              </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-white font-bold mb-6">Support</h4>
             <ul className="space-y-3 text-zinc-500 text-sm">
-              <li className="cursor-pointer hover:text-white">Help Center</li>
-              <li className="cursor-pointer hover:text-white">Shipping Info</li>
-              <li className="cursor-pointer hover:text-white">Returns</li>
-              <li className="cursor-pointer hover:text-white">Track Order</li>
+              <li>
+                <Link to="/help" className="block hover:text-white transition">Help Center</Link>
+              </li>
+              <li>
+                <Link to="/shipping-info" className="block hover:text-white transition">Shipping Info</Link>
+              </li>
+              <li>
+                <Link to="/returns" className="block hover:text-white transition">Returns</Link>
+              </li>
+              <li>
+                <Link to="/track-order" className="block hover:text-white transition">Track Order</Link>
+              </li>
             </ul>
           </div>
 
@@ -444,9 +460,11 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p>© 2026 Lynx Pet Shop. Built for pet lovers everywhere.</p>
             <div className="flex flex-wrap items-center gap-4 text-zinc-400">
-              <span className="hover:text-white cursor-pointer">Terms</span>
-              <span className="hover:text-white cursor-pointer">Privacy</span>
-              <span className="hover:text-white cursor-pointer">Sitemap</span>
+              <Link to="/terms-of-service" className="hover:text-white transition">Terms of Service</Link>
+              <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
+              <Link to="/shipping-policy" className="hover:text-white transition">Shipping Policy</Link>
+              <Link to="/return-policy" className="hover:text-white transition">Return Policy</Link>
+              <Link to="/sitemap" className="hover:text-white transition">Sitemap</Link>
             </div>
           </div>
         </div>
