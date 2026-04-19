@@ -87,37 +87,21 @@ const PetCard = ({ pet, onAddToCart }) => {
                 return;
               }
 
-              const currentUserId = user?.id || userId;
-              if (!currentUserId) {
-                console.error('Unable to determine user id; please sign in again.');
-                return;
-              }
-
-              let cartItemId = null;
               try {
-                const response = await axios.post('/cart/', {
+                // Delegate to central handler in App.js which now handles server sync
+                await onAddToCart({
                   item_type: 'pet',
                   pet_id: pet.id,
-                  product_variant_id: null,
+                  id: pet.id,
+                  name: pet.name,
+                  img: primaryImage?.image_url || '',
+                  price: parseFloat(pet.price),
                   quantity: 1,
-                  user_id: currentUserId,
+                  category: pet.pet_type?.name || pet.pet_type || 'Pet',
                 });
-                cartItemId = response?.data?.id || null;
               } catch (error) {
-                console.error('Failed to add pet to cart', error.response?.data || error);
+                console.error('Failed to add pet to cart', error);
               }
-
-              onAddToCart({
-                item_type: 'pet',
-                pet_id: pet.id,
-                id: pet.id,
-                cart_item_id: cartItemId,
-                name: pet.name,
-                img: primaryImage?.image_url || '',
-                price: parseFloat(pet.price),
-                quantity: 1,
-                category: pet.pet_type?.name || pet.pet_type || 'Pet',
-              });
             }}
             disabled={!pet.is_available || pet.stock === 0}
             className={`w-full font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${

@@ -59,118 +59,7 @@ const ProductCard = ({ product, onAddToCart, linkTo }) => (
   </Link>
 );
 
-const CheckoutModal = ({ isOpen, onClose, cartItems, onClearCart }) => {
-  const [step, setStep] = useState('summary');
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', address: '' });
-  const total = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-xl relative overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">Your Order</h3>
-          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          {step === 'summary' && (
-            <div className="space-y-4">
-              {cartItems.length > 0 ? (
-                cartItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 bg-zinc-950 p-3 rounded-xl border border-zinc-800">
-                    <img src={item.img || 'https://via.placeholder.com/64'} className="w-16 h-16 rounded-lg object-cover" alt={item.name} />
-                    <div className="flex-1">
-                      <h4 className="text-white font-medium">{item.name}</h4>
-                      <p className="text-zinc-500 text-sm capitalize">{item.category || 'Product'}</p>
-                    </div>
-                    <span className="text-white font-bold">₹{(item.price || 0).toLocaleString('en-IN')}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-zinc-500 py-10">Your cart is empty.</p>
-              )}
-            </div>
-          )}
-
-          {step === 'details' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <input 
-                  placeholder="First Name" 
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500" 
-                />
-                <input 
-                  placeholder="Last Name" 
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500" 
-                />
-              </div>
-              <input 
-                placeholder="Address" 
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                className="w-full bg-zinc-950 border border-zinc-800 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500" 
-              />
-              <div className="bg-zinc-950 p-4 rounded-xl border border-blue-500/30 flex items-center gap-3">
-                <div className="text-blue-500"><CreditCard size={20} /></div>
-                <span className="text-white">Pay Securely via Credit Card / UPI</span>
-              </div>
-            </div>
-          )}
-
-          {step === 'success' && (
-            <div className="text-center py-10">
-              <div className="bg-green-500/10 text-green-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 size={48} />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Order Placed!</h2>
-              <p className="text-zinc-400">Thank you for shopping with Lynx. Your pets will love it!</p>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 bg-zinc-950 border-t border-zinc-800">
-          <div className="flex justify-between mb-4">
-            <span className="text-zinc-400">Total Amount</span>
-            <span className="text-2xl font-bold text-white">₹{total.toLocaleString('en-IN')}</span>
-          </div>
-          {step === 'summary' && cartItems.length > 0 && (
-            <button 
-              onClick={() => setStep('details')} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              Proceed to Payment <Truck size={20} />
-            </button>
-          )}
-          {step === 'details' && (
-            <button 
-              onClick={() => setStep('success')} 
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all"
-            >
-              Complete Order
-            </button>
-          )}
-          {step === 'success' && (
-            <button 
-              onClick={() => { onClearCart(); onClose(); setStep('summary'); }} 
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl transition-all"
-            >
-              Close
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+// Removed redundant CheckoutModal. Using dedicated /checkout route instead.
 
 const HeroCarousel = ({ onAddToCart }) => {
   const [current, setCurrent] = useState(0);
@@ -196,12 +85,12 @@ const HeroCarousel = ({ onAddToCart }) => {
           <div className="container mx-auto px-10 relative z-20">
             <h2 className="text-5xl font-black text-white mb-4 transition-all duration-700">{slide.title}</h2>
             <p className="text-xl text-zinc-200 mb-8 max-w-lg">{slide.subtitle}</p>
-            <button 
-              onClick={() => onAddToCart(mockProduct)}
+            <Link 
+              to="/products"
               className="bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105"
             >
               Shop Now
-            </button>
+            </Link>
           </div>
         </div>
       ))}
@@ -470,13 +359,6 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
         </div>
       </footer>
 
-      {/* Checkout Modal - triggered by cart button */}
-      <CheckoutModal 
-        isOpen={cartOpen} 
-        onClose={() => setCartOpen(false)} 
-        cartItems={cartItems}
-        onClearCart={onClearCart}
-      />
     </div>
   );
 };

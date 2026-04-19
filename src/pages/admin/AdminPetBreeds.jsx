@@ -68,7 +68,7 @@ const AdminPetBreeds = () => {
       name: breed.name || '',
       description: breed.description || '',
       pet_type_id: breed.pet_type_id || breed.pet_type?.id || '',
-      is_active: true, // Force active when editing
+      is_active: breed.is_active ?? true,
     });
     setShowForm(true);
   };

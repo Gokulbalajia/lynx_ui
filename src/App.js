@@ -98,9 +98,21 @@ function AppRoutes() {
     loadServerCart();
   }, [token]);
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
+    // Standardize IDs: ensure we have item_type and correct ID fields
+    const itemType = product.item_type || (product.pet_id ? 'pet' : 'product');
+    const entityId = product.id || product.product_variant_id || product.pet_id;
+
+    if (!entityId) {
+      console.error('Cannot add item: Missing ID', product);
+      return;
+    }
+
+    // Optimistically update local state
     setCartItems((currentItems) => {
-      const existingIndex = currentItems.findIndex((item) => item.id === product.id && item.item_type === product.item_type);
+      const existingIndex = currentItems.findIndex(
+        (item) => (item.id === entityId || item.product_variant_id === entityId || item.pet_id === entityId) && item.item_type === itemType
+      );
       if (existingIndex >= 0) {
         const updatedItems = [...currentItems];
         updatedItems[existingIndex] = {
@@ -109,12 +121,53 @@ function AppRoutes() {
         };
         return updatedItems;
       }
-      return [...currentItems, { ...product, quantity: 1 }];
+      return [...currentItems, { 
+        ...product, 
+        id: entityId, 
+        item_type: itemType, 
+        quantity: 1 
+      }];
     });
+
+    // If authenticated, sync with server
+    if (token) {
+      try {
+        const payload = {
+          item_type: itemType,
+          quantity: 1,
+          product_variant_id: itemType === 'product' ? entityId : null,
+          pet_id: itemType === 'pet' ? entityId : null
+        };
+        const response = await axios.post('/cart/', payload);
+        
+        // Update the local item with the server's cart_item_id for future operations
+        if (response.data?.id) {
+          setCartItems(current => current.map(item => 
+            (item.id === entityId && item.item_type === itemType) 
+              ? { ...item, cart_item_id: response.data.id } 
+              : item
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to sync item to server cart:', error.response?.data || error);
+      }
+    }
   };
 
   const handleRemoveFromCart = async (itemId, itemType) => {
-    const itemToRemove = cartItems.find((item) => (item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType);
+    const itemToRemove = cartItems.find((item) => 
+      (item.cart_item_id === itemId || item.id === itemId) && item.item_type === itemType
+    );
+
+    // Remove from local state immediately (optimistic)
+    setCartItems((currentItems) =>
+      currentItems.filter(
+        (item) => !(
+          (item.cart_item_id === itemId || item.id === itemId) && item.item_type === itemType
+        )
+      )
+    );
+
     if (itemToRemove?.cart_item_id) {
       try {
         await axios.delete(`/cart/${itemToRemove.cart_item_id}`);
@@ -122,13 +175,6 @@ function AppRoutes() {
         console.error('Failed to remove item from cart API:', error);
       }
     }
-    setCartItems((currentItems) =>
-      currentItems.filter(
-        (item) => !(
-          (item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType
-        )
-      )
-    );
   };
 
   const handleClearCart = () => {

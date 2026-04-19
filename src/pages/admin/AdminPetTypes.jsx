@@ -62,7 +62,7 @@ const AdminPetTypes = () => {
     setForm({
       name: typeItem.name || '',
       description: typeItem.description || '',
-      is_active: true, // Force active when editing
+      is_active: typeItem.is_available ?? typeItem.is_active ?? true,
     });
     setShowForm(true);
   };

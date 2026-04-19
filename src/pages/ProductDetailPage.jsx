@@ -24,17 +24,6 @@ const getVariantStatus = (variant) => {
   return { text: 'In stock', badge: 'bg-green-500/10 text-green-300', strike: false };
 };
 
-const getSpeciesPill = (species) => {
-  const map = {
-    Dog: 'bg-blue-500 text-white',
-    Cat: 'bg-pink-500 text-white',
-    Bird: 'bg-amber-500 text-zinc-950',
-    Fish: 'bg-teal-500 text-zinc-950',
-    Rabbit: 'bg-violet-500 text-white'
-  };
-  return map[species] || 'bg-zinc-700 text-white';
-};
-
 const ProductDetailPage = ({ onAddToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -119,37 +108,20 @@ const ProductDetailPage = ({ onAddToCart }) => {
     }
     if (!selectedVariant) return;
 
-    const currentUserId = user?.id || userId;
-    if (!currentUserId) {
-      console.error('Unable to determine user id; please sign in again.');
-      return;
-    }
-
-    let cartItemId = null;
     try {
-      const response = await axios.post('/cart/', {
+      await onAddToCart({
         item_type: 'product',
         product_variant_id: selectedVariant.id,
-        pet_id: null,
+        id: product.id,
+        name: product.name,
+        img: product.images?.[0]?.image_url || '',
+        price: parseFloat(selectedVariant.price || '0'),
         quantity,
-        user_id: currentUserId
+        category: product.category
       });
-      cartItemId = response?.data?.id || null;
     } catch (error) {
-      console.error('Failed to add product to cart', error.response?.data || error);
+      console.error('Failed to add product to cart', error);
     }
-
-    onAddToCart({
-      item_type: 'product',
-      product_variant_id: selectedVariant.id,
-      id: product.id,
-      cart_item_id: cartItemId,
-      name: product.name,
-      img: product.images?.[0]?.image_url || '',
-      price: parseFloat(selectedVariant.price || '0'),
-      quantity,
-      category: product.category
-    });
   };
 
   const handleBuyNow = async () => {
@@ -343,30 +315,6 @@ const ProductDetailPage = ({ onAddToCart }) => {
             <div className="space-y-3 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
               <button
                 type="button"
-                onClick={() => setActivePane((prev) => (prev === 'compatibility' ? '' : 'compatibility'))}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <span className="font-semibold text-white">Pet compatibility</span>
-                <span className="text-zinc-400">{activePane === 'compatibility' ? '-' : '+'}</span>
-              </button>
-              {activePane === 'compatibility' && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {(product.details?.pet_species_tags || []).map((tag) => (
-                    <span key={tag} className={`${getSpeciesPill(tag)} rounded-full px-3 py-1 text-xs font-semibold`}>
-                      {tag}
-                    </span>
-                  ))}
-                  {(product.details?.lifestyle_tags || []).map((tag) => (
-                    <span key={tag} className="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="space-y-3 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
-              <button
-                type="button"
                 onClick={() => setActivePane((prev) => (prev === 'weight' ? '' : 'weight'))}
                 className="flex items-center justify-between w-full text-left"
               >
@@ -448,11 +396,6 @@ const ProductDetailPage = ({ onAddToCart }) => {
                     </h3>
                     <p className="text-sm text-zinc-500 mb-3">{formatCurrency(related.variants?.[0]?.price)}</p>
                     <div className="flex flex-wrap gap-2">
-                      {(related.details?.pet_species_tags || []).map((tag) => (
-                        <span key={tag} className={`${getSpeciesPill(tag)} rounded-full px-2 py-1 text-xs font-semibold`}>
-                          {tag}
-                        </span>
-                      ))}
                     </div>
                   </div>
                 </Link>

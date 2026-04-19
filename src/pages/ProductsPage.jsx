@@ -12,15 +12,6 @@ const SEED_CATEGORIES = [
   { id: 'cat-5', name: 'Grooming', description: 'Brushes, shampoos & grooming tools' }
 ];
 
-const SPECIES = ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit'];
-const SPECIES_STYLES = {
-  Dog: 'bg-blue-600 text-white',
-  Cat: 'bg-pink-600 text-white',
-  Bird: 'bg-amber-500 text-zinc-950',
-  Fish: 'bg-teal-500 text-zinc-950',
-  Rabbit: 'bg-violet-500 text-white'
-};
-
 const PRICE_MIN = 0;
 const PRICE_MAX = 5000;
 
@@ -61,7 +52,6 @@ const ProductsPage = ({ onAddToCart }) => {
   const [allProducts, setAllProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState(SEED_CATEGORIES.map((category) => category.id));
-  const [selectedSpecies, setSelectedSpecies] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [priceRange, setPriceRange] = useState([PRICE_MIN, PRICE_MAX]);
   const [stockOnly, setStockOnly] = useState(false);
@@ -162,13 +152,6 @@ const ProductsPage = ({ onAddToCart }) => {
   const filteredProducts = useMemo(() => {
     return categoryFilteredProducts
       .filter((product) => {
-        if (selectedSpecies.length > 0) {
-          const tags = product.details?.pet_species_tags || [];
-          if (!selectedSpecies.some((species) => tags.includes(species))) {
-            return false;
-          }
-        }
-
         if (selectedBrands.length > 0 && !selectedBrands.includes(product.brand)) {
           return false;
         }
@@ -205,7 +188,7 @@ const ProductsPage = ({ onAddToCart }) => {
             return parseInt(b.id, 10) - parseInt(a.id, 10);
         }
       });
-  }, [categoryFilteredProducts, selectedBrands, selectedSpecies, priceRange, stockOnly, searchQuery, sortBy]);
+  }, [categoryFilteredProducts, selectedBrands, priceRange, stockOnly, searchQuery, sortBy]);
 
   const countsByCategory = useMemo(() => {
     return categories.reduce((acc, category) => {
@@ -223,12 +206,6 @@ const ProductsPage = ({ onAddToCart }) => {
     });
   };
 
-  const toggleSpecies = (species) => {
-    setSelectedSpecies((prev) =>
-      prev.includes(species) ? prev.filter((item) => item !== species) : [...prev, species]
-    );
-  };
-
   const toggleBrand = (brandName) => {
     setSelectedBrands((prev) =>
       prev.includes(brandName) ? prev.filter((item) => item !== brandName) : [...prev, brandName]
@@ -237,7 +214,6 @@ const ProductsPage = ({ onAddToCart }) => {
 
   const clearFilters = () => {
     setSelectedCategoryIds(categories.map((category) => category.id.toString()));
-    setSelectedSpecies([]);
     setSelectedBrands([]);
     setPriceRange([PRICE_MIN, PRICE_MAX]);
     setStockOnly(false);
@@ -270,56 +246,36 @@ const ProductsPage = ({ onAddToCart }) => {
       return;
     }
 
-    const currentUserId = user?.id || userId;
-    if (!currentUserId) {
+    setAddingToCartId(product.id);
+    setCartStatus({ text: '', type: '', productId: null });
+
+    try {
+      // Delegate to central handler in App.js which now handles server sync
+      await onAddToCart({
+        item_type: 'product',
+        product_variant_id: variant.id,
+        id: product.id,
+        name: product.name,
+        img: product.images?.[0]?.image_url || '',
+        price: parseFloat(variant.price || '0'),
+        quantity: 1,
+        category: product.category
+      });
+
       setCartStatus({
-        text: 'Unable to determine user. Please sign in again.',
+        text: 'Added to cart successfully.',
+        type: 'success',
+        productId: product.id
+      });
+    } catch (error) {
+      setCartStatus({
+        text: 'Failed to add item to cart. Please try again.',
         type: 'error',
         productId: product.id
       });
-      return;
+    } finally {
+      setAddingToCartId(null);
     }
-
-    setAddingToCartId(product.id);
-    setCartStatus({ text: '', type: '', productId: null });
-    let cartSynced = false;
-
-    try {
-      const response = await axios.post('/cart/', {
-        item_type: 'product',
-        product_variant_id: variant.id,
-        pet_id: null,
-        quantity: 1,
-        user_id: currentUserId
-      });
-      if (response?.data?.id) {
-        cartSynced = true;
-        variant.cart_item_id = response.data.id;
-      }
-    } catch (error) {
-      console.error('Cart sync failed, falling back to local cart', error.response?.data || error);
-    }
-
-    onAddToCart({
-      item_type: 'product',
-      product_variant_id: variant.id,
-      id: product.id,
-      cart_item_id: variant.cart_item_id || null,
-      name: product.name,
-      img: product.images?.[0]?.image_url || '',
-      price: parseFloat(variant.price || '0'),
-      quantity: 1,
-      category: product.category
-    });
-
-    setCartStatus({
-      text: cartSynced
-        ? 'Added to cart successfully.'
-        : 'Added locally. Sign in to sync with your account.',
-      type: cartSynced ? 'success' : 'warning',
-      productId: product.id
-    });
-    setAddingToCartId(null);
   };
 
   const toggleWishlist = (productId) => {
@@ -402,23 +358,6 @@ const ProductsPage = ({ onAddToCart }) => {
                           className="h-4 w-4 text-blue-500 bg-zinc-800 border-zinc-700 rounded"
                         />
                       </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400 mb-4">Pet species</h3>
-                <div className="grid gap-3">
-                  {SPECIES.map((species) => (
-                    <label key={species} className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 cursor-pointer hover:border-blue-500">
-                      <span className="text-sm text-white">{species}</span>
-                      <input
-                        type="checkbox"
-                        checked={selectedSpecies.includes(species)}
-                        onChange={() => toggleSpecies(species)}
-                        className="h-4 w-4 text-blue-500 bg-zinc-800 border-zinc-700 rounded"
-                      />
                     </label>
                   ))}
                 </div>
@@ -553,13 +492,6 @@ const ProductsPage = ({ onAddToCart }) => {
                           {product.short_description}
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {(product.details?.pet_species_tags || []).map((species) => (
-                            <span key={species} className={`rounded-full px-2 py-1 text-xs font-semibold ${SPECIES_STYLES[species] || 'bg-zinc-700 text-white'}`}>
-                              {species}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
                           {(product.variants || []).map((variant) => (
                             <button
                               key={variant.id}
@@ -647,22 +579,6 @@ const ProductsPage = ({ onAddToCart }) => {
                         type="checkbox"
                         checked={selectedCategoryIds.includes(category.id.toString())}
                         onChange={() => toggleCategory(category.id.toString())}
-                        className="h-4 w-4 text-blue-500 bg-zinc-800 border-zinc-700 rounded"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-400 mb-4">Pet species</h3>
-                <div className="grid gap-3">
-                  {SPECIES.map((species) => (
-                    <label key={species} className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 cursor-pointer hover:border-blue-500">
-                      <span className="text-sm text-white">{species}</span>
-                      <input
-                        type="checkbox"
-                        checked={selectedSpecies.includes(species)}
-                        onChange={() => toggleSpecies(species)}
                         className="h-4 w-4 text-blue-500 bg-zinc-800 border-zinc-700 rounded"
                       />
                     </label>

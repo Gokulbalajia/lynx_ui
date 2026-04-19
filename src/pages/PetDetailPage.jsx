@@ -213,37 +213,20 @@ const PetDetailPage = ({ onAddToCart }) => {
       return;
     }
 
-    const currentUserId = user?.id || userId;
-    if (!currentUserId) {
-      console.error('Unable to determine user id; please sign in again.');
-      return;
-    }
-
-    let cartItemId = null;
     try {
-      const response = await axios.post('/cart/', {
+      await onAddToCart({
         item_type: 'pet',
         pet_id: pet.id,
-        product_variant_id: null,
-        quantity: 1,
-        user_id: currentUserId
+        id: pet.id,
+        name: pet.name,
+        img: pet.images?.[0]?.image_url || '',
+        price: parseFloat(pet.price),
+        quantity,
+        category: petType?.name || 'Pet',
       });
-      cartItemId = response?.data?.id || null;
     } catch (error) {
-      console.error('Failed to add pet to cart', error.response?.data || error);
+       console.error('Failed to add pet to cart', error);
     }
-
-    onAddToCart({
-      item_type: 'pet',
-      pet_id: pet.id,
-      id: pet.id,
-      cart_item_id: cartItemId,
-      name: pet.name,
-      img: pet.images?.[0]?.image_url || '',
-      price: parseFloat(pet.price),
-      quantity,
-      category: petType?.name || 'Pet',
-    });
   };
 
   const openWhatsApp = () => {
