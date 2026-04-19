@@ -95,7 +95,7 @@ const PetCard = ({ pet, onAddToCart }) => {
 const PetDetailPage = ({ onAddToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user, userId } = useAuth();
+  const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -411,17 +411,19 @@ const PetDetailPage = ({ onAddToCart }) => {
 
             {/* CTA Buttons */}
             <div className="space-y-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={!pet.is_available || pet.stock === 0}
-                className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
-                  pet.is_available && pet.stock > 0
-                    ? 'bg-amber-600 hover:bg-amber-700 text-black'
-                    : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
-                }`}
-              >
-                Add to Cart
-              </button>
+              {!isAdmin && (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!pet.is_available || pet.stock === 0}
+                  className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
+                    pet.is_available && pet.stock > 0
+                      ? 'bg-amber-600 hover:bg-amber-700 text-black'
+                      : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+                  }`}
+                >
+                  Add to Cart
+                </button>
+              )}
               <button
                 onClick={openWhatsApp}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2"

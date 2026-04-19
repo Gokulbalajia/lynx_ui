@@ -79,17 +79,19 @@ const Header = ({ cartCount }) => {
                 </span>
               </button>
             )}
-            <button 
-              onClick={() => navigate('/cart')}
-              className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-            >
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            {!isAdmin && (
+              <button 
+                onClick={() => navigate('/cart')}
+                className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+              >
+                <ShoppingCart size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
             {isAuthenticated ? (
               <button 
                 onClick={handleLogout}
@@ -120,13 +122,15 @@ const Header = ({ cartCount }) => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden mt-4 pb-4 border-t border-zinc-800 pt-4 space-y-3">
-          <button 
-            onClick={() => { navigate('/cart'); setMobileMenuOpen(false); }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition"
-          >
-            <ShoppingCart size={18} />
-            <span>Cart ({cartCount})</span>
-          </button>
+          {!isAdmin && (
+            <button 
+              onClick={() => { navigate('/cart'); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition"
+            >
+              <ShoppingCart size={18} />
+              <span>Cart ({cartCount})</span>
+            </button>
+          )}
           {isAuthenticated && (
             <button 
               onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}

@@ -49,7 +49,7 @@ const ProductCardSkeleton = () => (
 
 const ProductsPage = ({ onAddToCart }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, userId } = useAuth();
+  const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState(SEED_CATEGORIES);
   const [allProducts, setAllProducts] = useState([]);
@@ -546,17 +546,19 @@ const ProductsPage = ({ onAddToCart }) => {
                           </div>
                           <p className={`text-sm font-semibold ${stockStatus.klass}`}>{stockStatus.text}</p>
                         </div>
-                        <button
-                          onClick={() => handleAdd(product, selectedVariant)}
-                          disabled={selectedVariant.stock === 0 || addingToCartId === product.id}
-                          className={`w-full rounded-2xl py-3 text-sm font-semibold transition ${
-                            selectedVariant.stock === 0 || addingToCartId === product.id
-                              ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
-                              : 'bg-amber-500 text-zinc-950 hover:bg-amber-400'
-                          }`}
-                        >
-                          {addingToCartId === product.id ? 'Adding…' : 'Add to Cart'}
-                        </button>
+                        {!isAdmin && (
+                          <button
+                            onClick={() => handleAdd(product, selectedVariant)}
+                            disabled={selectedVariant.stock === 0 || addingToCartId === product.id}
+                            className={`w-full rounded-2xl py-3 text-sm font-semibold transition ${
+                              selectedVariant.stock === 0 || addingToCartId === product.id
+                                ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+                                : 'bg-amber-500 text-zinc-950 hover:bg-amber-400'
+                            }`}
+                          >
+                            {addingToCartId === product.id ? 'Adding…' : 'Add to Cart'}
+                          </button>
+                        )}
                         {cartStatus.productId === product.id && cartStatus.text && (
                           <p className={`mt-3 text-sm ${cartStatus.type === 'success' ? 'text-green-400' : 'text-rose-400'}`}>
                             {cartStatus.text}

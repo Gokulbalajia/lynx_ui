@@ -32,7 +32,7 @@ const getSpeciesPill = (species) => {
 const ProductDetailPage = ({ onAddToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user, userId } = useAuth();
+  const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -297,25 +297,27 @@ const ProductDetailPage = ({ onAddToCart }) => {
                 </div>
               )}
 
-              <div className="space-y-3">
-                <button
-                  onClick={handleAddToCartClick}
-                  disabled={selectedVariantStock === 0}
-                  className={`w-full rounded-3xl py-4 text-lg font-semibold transition ${
-                    selectedVariantStock === 0
-                      ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
-                      : 'bg-amber-500 text-zinc-950 hover:bg-amber-400'
-                  }`}
-                >
-                  Add to Cart
-                </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="w-full rounded-3xl bg-zinc-700 py-4 text-lg font-semibold text-white hover:bg-zinc-600 transition"
-                >
-                  Buy Now
-                </button>
-              </div>
+              {!isAdmin && (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleAddToCartClick}
+                    disabled={selectedVariantStock === 0}
+                    className={`w-full rounded-3xl py-4 text-lg font-semibold transition ${
+                      selectedVariantStock === 0
+                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+                        : 'bg-amber-500 text-zinc-950 hover:bg-amber-400'
+                    }`}
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="w-full rounded-3xl bg-zinc-700 py-4 text-lg font-semibold text-white hover:bg-zinc-600 transition"
+                  >
+                    Buy Now
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">

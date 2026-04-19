@@ -19,7 +19,7 @@ const PetCardSkeleton = () => (
 
 const PetCard = ({ pet, onAddToCart }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, userId } = useAuth();
+  const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const primaryImage = pet.images?.find(img => img.is_primary) || pet.images?.[0];
 
   const formatAge = (months) => {
@@ -80,52 +80,54 @@ const PetCard = ({ pet, onAddToCart }) => {
             <Eye size={16} />
             View Details
           </button>
-          <button
-            onClick={async () => {
-              if (!isAuthenticated) {
-                navigate('/login');
-                return;
-              }
+          {!isAdmin && (
+            <button
+              onClick={async () => {
+                if (!isAuthenticated) {
+                  navigate('/login');
+                  return;
+                }
 
-              const currentUserId = user?.id || userId;
-              if (!currentUserId) {
-                console.error('Unable to determine user id; please sign in again.');
-                return;
-              }
+                const currentUserId = user?.id || userId;
+                if (!currentUserId) {
+                  console.error('Unable to determine user id; please sign in again.');
+                  return;
+                }
 
-              try {
-                await axios.post('/cart/', {
+                try {
+                  await axios.post('/cart/', {
+                    item_type: 'pet',
+                    pet_id: pet.id,
+                    product_variant_id: null,
+                    quantity: 1,
+                    user_id: currentUserId
+                  });
+                } catch (error) {
+                  console.error('Failed to add pet to cart', error.response?.data || error);
+                }
+
+                onAddToCart({
                   item_type: 'pet',
                   pet_id: pet.id,
-                  product_variant_id: null,
+                  id: pet.id,
+                  name: pet.name,
+                  img: primaryImage?.image_url || '',
+                  price: parseFloat(pet.price),
                   quantity: 1,
-                  user_id: currentUserId
+                  category: pet.pet_type?.name || pet.pet_type || 'Pet',
                 });
-              } catch (error) {
-                console.error('Failed to add pet to cart', error.response?.data || error);
-              }
-
-              onAddToCart({
-                item_type: 'pet',
-                pet_id: pet.id,
-                id: pet.id,
-                name: pet.name,
-                img: primaryImage?.image_url || '',
-                price: parseFloat(pet.price),
-                quantity: 1,
-                category: pet.pet_type?.name || pet.pet_type || 'Pet',
-              });
-            }}
-            disabled={!pet.is_available || pet.stock === 0}
-            className={`w-full font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
-              pet.is_available && pet.stock > 0
-                ? 'bg-amber-600 hover:bg-amber-700 text-black'
-                : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
-            }`}
-          >
-            <ShoppingCart size={16} />
-            Add to Cart
-          </button>
+              }}
+              disabled={!pet.is_available || pet.stock === 0}
+              className={`w-full font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                pet.is_available && pet.stock > 0
+                  ? 'bg-amber-600 hover:bg-amber-700 text-black'
+                  : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+              }`}
+            >
+              <ShoppingCart size={16} />
+              Add to Cart
+            </button>
+          )}
         </div>
       </div>
     </div>

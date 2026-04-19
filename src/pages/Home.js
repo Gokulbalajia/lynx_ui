@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, CheckCircle2, CreditCard, Truck, X, Mail, MapPin, Phone, ExternalLink, Camera, Globe, Heart } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+
 
 const PET_CATEGORIES = [
   { id: 'dog', name: 'Dog', image: '/images/pexels-hnoody93-58997.jpg' },
@@ -26,23 +28,25 @@ const AVAILABLE_PETS = [
   { id: 'pet-5', name: 'Parakeet Pair', price: 4999, category: 'Bird', img: '/images/bird-pair.jpg' },
 ];
 
-const ProductCard = ({ product, onAddToCart, linkTo }) => (
+const ProductCard = ({ product, onAddToCart, linkTo, isAdmin }) => (
   <Link
     to={linkTo}
     className="group bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all flex-shrink-0 w-64 cursor-pointer"
   >
     <div className="h-48 overflow-hidden relative">
       <img src={product.img || 'https://via.placeholder.com/300'} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onAddToCart(product);
-        }}
-        className="absolute bottom-3 right-3 bg-blue-600 p-2 rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all hover:bg-blue-700"
-      >
-        <ShoppingCart size={20} />
-      </button>
+      {!isAdmin && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddToCart(product);
+          }}
+          className="absolute bottom-3 right-3 bg-blue-600 p-2 rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all hover:bg-blue-700"
+        >
+          <ShoppingCart size={20} />
+        </button>
+      )}
     </div>
     <div className="p-4">
       <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{product.category || 'Product'}</div>
@@ -172,7 +176,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, onClearCart }) => {
   );
 };
 
-const HeroCarousel = ({ onAddToCart }) => {
+const HeroCarousel = ({ onAddToCart, isAdmin }) => {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -196,12 +200,14 @@ const HeroCarousel = ({ onAddToCart }) => {
           <div className="container mx-auto px-10 relative z-20">
             <h2 className="text-5xl font-black text-white mb-4 transition-all duration-700">{slide.title}</h2>
             <p className="text-xl text-zinc-200 mb-8 max-w-lg">{slide.subtitle}</p>
-            <button 
-              onClick={() => onAddToCart(mockProduct)}
-              className="bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105"
-            >
-              Shop Now
-            </button>
+            {!isAdmin && (
+              <button 
+                onClick={() => onAddToCart(mockProduct)}
+                className="bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105"
+              >
+                Shop Now
+              </button>
+            )}
           </div>
         </div>
       ))}
@@ -219,6 +225,7 @@ const HeroCarousel = ({ onAddToCart }) => {
 };
 
 const Home = ({ cartItems, onAddToCart, onClearCart }) => {
+  const { isAdmin } = useAuth();
   const [mockCategories] = useState([
     // 🐶 DOG
     { id: 1, category: 'dog', name: 'Food', price: 2499, img: '/images/Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
@@ -259,7 +266,7 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
 
   return (
     <div className="min-h-screen bg-black">
-      <HeroCarousel onAddToCart={onAddToCart} />
+      <HeroCarousel onAddToCart={onAddToCart} isAdmin={isAdmin} />
 
       <main className="container mx-auto px-6 py-16 space-y-24">
         {/* Pet Categories */}
@@ -329,6 +336,7 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
                       product={prod}
                       onAddToCart={onAddToCart}
                       linkTo={`/products?category=${cat.id}&tag=${encodeURIComponent(prod.name.toLowerCase())}`}
+                      isAdmin={isAdmin}
                     />
                   ))
                 }
@@ -352,12 +360,14 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
                 <div>
                   <h4 className="font-bold text-white">{prod.name}</h4>
                   <p className="text-blue-500 font-bold">₹{prod.price.toLocaleString('en-IN')}</p>
-                  <button 
-                    onClick={() => onAddToCart(prod)}
-                    className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full mt-2 hover:bg-blue-600 transition-all"
-                  >
-                    + Quick Add
-                  </button>
+                  {!isAdmin && (
+                    <button 
+                      onClick={() => onAddToCart(prod)}
+                      className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full mt-2 hover:bg-blue-600 transition-all"
+                    >
+                      + Quick Add
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
