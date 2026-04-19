@@ -97,6 +97,8 @@ const PetDetailPage = ({ onAddToCart }) => {
   const navigate = useNavigate();
   const { isAuthenticated, user, userId } = useAuth();
   const [pet, setPet] = useState(null);
+  const [petType, setPetType] = useState(null);
+  const [breed, setBreed] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -107,7 +109,32 @@ const PetDetailPage = ({ onAddToCart }) => {
       setLoading(true);
       try {
         const response = await axios.get(`/pets/${id}`);
+        console.log('Full pet data:', response.data);
+        console.log('pet_type_id:', response.data?.pet_type_id);
+        console.log('breed_id:', response.data?.breed_id);
         setPet(response.data);
+
+        // Fetch pet type if pet_type_id exists
+        if (response.data?.pet_type_id) {
+          try {
+            const typeRes = await axios.get(`/pet-types/${response.data.pet_type_id}`);
+            console.log('Fetched pet type:', typeRes.data);
+            setPetType(typeRes.data);
+          } catch (err) {
+            console.error('Failed to fetch pet type:', err);
+          }
+        }
+
+        // Fetch breed if breed_id exists
+        if (response.data?.breed_id) {
+          try {
+            const breedRes = await axios.get(`/pet-breeds/${response.data.breed_id}`);
+            console.log('Fetched breed:', breedRes.data);
+            setBreed(breedRes.data);
+          } catch (err) {
+            console.error('Failed to fetch breed:', err);
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch pet:', error);
         setPet(null);
@@ -129,34 +156,34 @@ const PetDetailPage = ({ onAddToCart }) => {
 
   const genderColor = pet?.gender === 'Male' ? 'text-blue-400' : pet?.gender === 'Female' ? 'text-pink-400' : 'text-zinc-400';
 
-  const getHealthCareInfo = (petType, ageMonths) => {
+  const getHealthCareInfo = (petTypeData, ageMonths) => {
     const info = {
       vaccinations: ageMonths < 6 ? 'First dose complete' : 'Up to date',
-      livingSpace: petType === 'Dog' ? 'Needs outdoor space' : 'Apartment OK',
+      livingSpace: petTypeData?.name === 'Dog' ? 'Needs outdoor space' : 'Apartment OK',
       diet: {
         Dog: '2x daily kibble',
         Cat: 'Wet + dry mix',
         Bird: 'Seeds + pellets',
         Fish: 'Flake food daily',
         Rabbit: 'Hay + pellets',
-      }[petType] || 'Balanced diet',
+      }[petTypeData?.name] || 'Balanced diet',
       activity: {
         Dog: 'Daily walks + play',
         Cat: 'Indoor play + scratching',
         Bird: 'Flight time + toys',
         Fish: 'Swim space + plants',
         Rabbit: 'Hopping space + toys',
-      }[petType] || 'Regular exercise',
+      }[petTypeData?.name] || 'Regular exercise',
     };
     return info;
   };
 
-  const healthInfo = getHealthCareInfo(pet?.pet_type, pet?.age_months);
+  const healthInfo = getHealthCareInfo(petType, pet?.age_months);
 
   const [relatedPets, setRelatedPets] = useState([]);
 
   useEffect(() => {
-    if (!pet?.pet_type) {
+    if (!petType || !pet) {
       setRelatedPets([]);
       return;
     }
@@ -167,7 +194,7 @@ const PetDetailPage = ({ onAddToCart }) => {
         if (Array.isArray(response.data)) {
           setRelatedPets(
             response.data
-              .filter((p) => p.pet_type === pet.pet_type && p.id !== pet.id)
+              .filter((p) => p.pet_type_id === pet.pet_type_id && p.id !== pet.id)
               .slice(0, 3)
           );
         }
@@ -178,7 +205,7 @@ const PetDetailPage = ({ onAddToCart }) => {
     };
 
     fetchRelatedPets();
-  }, [pet?.pet_type, pet?.id]);
+  }, [petType, pet?.id, pet?.pet_type_id]);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -215,7 +242,7 @@ const PetDetailPage = ({ onAddToCart }) => {
       img: pet.images?.[0]?.image_url || '',
       price: parseFloat(pet.price),
       quantity,
-      category: pet.pet_type?.name || pet.pet_type || 'Pet',
+      category: petType?.name || 'Pet',
     });
   };
 
@@ -239,6 +266,15 @@ const PetDetailPage = ({ onAddToCart }) => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {loading || !pet ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+              <p className="text-zinc-400">Loading pet details...</p>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Image Gallery */}
           <div className="space-y-4">
@@ -302,14 +338,14 @@ const PetDetailPage = ({ onAddToCart }) => {
                 <span className="text-zinc-400">🐾</span>
                 <div>
                   <p className="text-zinc-500 text-sm">Type</p>
-                  <p className="text-white font-semibold">{pet.pet_type?.name || pet.pet_type || 'Unknown type'}</p>
+                  <p className="text-white font-semibold">{petType?.name || 'Unknown type'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-zinc-400">🧬</span>
                 <div>
                   <p className="text-zinc-500 text-sm">Breed</p>
-                  <p className="text-white font-semibold">{pet.breed?.name || pet.breed || 'Unknown breed'}</p>
+                  <p className="text-white font-semibold">{breed?.name || 'Unknown breed'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -447,10 +483,12 @@ const PetDetailPage = ({ onAddToCart }) => {
             </div>
           </div>
         )}
+        </>
+        )}
       </div>
 
       {/* Lightbox */}
-      {lightboxOpen && (
+      {lightboxOpen && pet && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
@@ -466,16 +504,16 @@ const PetDetailPage = ({ onAddToCart }) => {
             alt={pet.name}
             className="max-w-full max-h-full object-contain"
           />
-          {pet.images && pet.images.length > 1 && (
+          {pet?.images && pet.images.length > 1 && (
             <>
               <button
-                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + pet.images.length) % pet.images.length)}
+                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + pet?.images.length) % pet?.images.length)}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-zinc-400 transition-colors"
               >
                 <ChevronLeft size={48} />
               </button>
               <button
-                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % pet.images.length)}
+                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % pet?.images.length)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-zinc-400 transition-colors"
               >
                 <ChevronRight size={48} />

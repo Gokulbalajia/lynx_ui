@@ -138,6 +138,7 @@ const PetCard = ({ pet, onAddToCart }) => {
 const PetsPage = ({ onAddToCart }) => {
   const [pets, setPets] = useState([]);
   const [petBreeds, setPetBreeds] = useState([]);
+  const [petTypes, setPetTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({
@@ -158,7 +159,17 @@ const PetsPage = ({ onAddToCart }) => {
       }
     };
 
+    const fetchTypes = async () => {
+      try {
+        const response = await axios.get('/pet-types/');
+        setPetTypes(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error('Failed to fetch pet types:', error);
+      }
+    };
+
     fetchBreeds();
+    fetchTypes();
   }, []);
 
   useEffect(() => {
@@ -171,7 +182,15 @@ const PetsPage = ({ onAddToCart }) => {
         }
         const response = await axios.get('/pets/', { params });
         if (Array.isArray(response.data)) {
-          setPets(response.data);
+          // Enrich pets with pet_type and breed data
+          const enrichedPets = response.data.map(pet => {
+            return {
+              ...pet,
+              pet_type: petTypes.find(t => t.id === pet.pet_type_id) || { name: 'Unknown type' },
+              breed: petBreeds.find(b => b.id === pet.breed_id) || { name: 'Unknown breed' }
+            };
+          });
+          setPets(enrichedPets);
         }
         setError('');
       } catch (error) {
@@ -184,11 +203,11 @@ const PetsPage = ({ onAddToCart }) => {
     };
 
     fetchPets();
-  }, [filters.breedId]);
+  }, [filters.breedId, petTypes, petBreeds]);
 
   const filteredAndSortedPets = useMemo(() => {
     let filtered = pets.filter(pet => {
-      if (filters.type !== 'All' && (pet.pet_type?.name || pet.pet_type) !== filters.type) return false;
+      if (filters.type !== 'All' && pet.pet_type?.name !== filters.type) return false;
       if (filters.gender !== 'All' && pet.gender !== filters.gender) return false;
       if (filters.availableOnly && !pet.is_available) return false;
       return true;
@@ -229,8 +248,8 @@ const PetsPage = ({ onAddToCart }) => {
         <div className="container mx-auto">
           <div className="flex flex-wrap items-center gap-4">
             {/* Pet Type Pills */}
-            <div className="flex gap-2">
-              {['All', 'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit'].map(type => (
+            <div className="flex gap-2 flex-wrap">
+              {['All', ...petTypes.map(t => t.name)].map(type => (
                 <button
                   key={type}
                   onClick={() => handleFilterChange('type', type)}

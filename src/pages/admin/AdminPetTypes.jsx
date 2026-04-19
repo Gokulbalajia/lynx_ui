@@ -62,7 +62,7 @@ const AdminPetTypes = () => {
     setForm({
       name: typeItem.name || '',
       description: typeItem.description || '',
-      is_active: typeItem.is_active ?? true,
+      is_active: true, // Force active when editing
     });
     setShowForm(true);
   };
@@ -87,6 +87,7 @@ const AdminPetTypes = () => {
     const payload = {
       name: form.name,
       description: form.description,
+      is_active: form.is_active,
     };
 
     try {
@@ -176,7 +177,6 @@ const AdminPetTypes = () => {
               <tr>
                 <th className="px-4 py-4 text-zinc-400">Name</th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
-                <th className="px-4 py-4 text-zinc-400">Status</th>
                 <th className="px-4 py-4 text-zinc-400">Actions</th>
               </tr>
             </thead>
@@ -187,12 +187,11 @@ const AdminPetTypes = () => {
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
-                    <td className="px-4 py-4">&nbsp;</td>
                   </tr>
                 ))
               ) : filteredTypes.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-4 py-10 text-center text-zinc-500">
+                  <td colSpan="3" className="px-4 py-10 text-center text-zinc-500">
                     No pet types available.
                   </td>
                 </tr>
@@ -201,11 +200,6 @@ const AdminPetTypes = () => {
                   <tr key={typeItem.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{typeItem.name}</td>
                     <td className="px-4 py-4 text-zinc-300">{typeItem.description || 'No description'}</td>
-                    <td className="px-4 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${typeItem.is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
-                        {typeItem.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
                     <td className="px-4 py-4 text-sm text-zinc-300">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -214,6 +208,14 @@ const AdminPetTypes = () => {
                           className="inline-flex items-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-600/10 px-3 py-2 text-blue-300 hover:bg-blue-600/20"
                         >
                           <Pencil size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(typeItem)}
+                          disabled={submitting}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-600/10 px-3 py-2 text-red-300 hover:bg-red-600/20 disabled:opacity-50"
+                        >
+                          {submitting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
                         </button>
                       </div>
                     </td>

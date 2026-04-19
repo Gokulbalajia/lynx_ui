@@ -10,6 +10,7 @@ const cardConfig = [
   { label: 'Products', icon: Package, color: 'text-emerald-400 bg-emerald-600/10', key: 'products' },
   { label: 'Pets', icon: Heart, color: 'text-amber-400 bg-amber-600/10', key: 'pets' },
   { label: 'Categories', icon: List, color: 'text-violet-400 bg-violet-600/10', key: 'categories' },
+  { label: 'Pet Types', icon: Box, color: 'text-cyan-400 bg-cyan-600/10', key: 'petTypes' },
   { label: 'Pet Breeds', icon: List, color: 'text-pink-400 bg-pink-600/10', key: 'petBreeds' },
 ];
 
@@ -21,7 +22,7 @@ const getApiError = (err) => {
 };
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ orders: 0, products: 0, pets: 0, categories: 0, petBreeds: 0 });
+  const [stats, setStats] = useState({ orders: 0, products: 0, pets: 0, categories: 0, petTypes: 0, petBreeds: 0 });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,12 +42,14 @@ const AdminDashboard = () => {
       const productsRes = await axios.get('/products/');
       const petsRes = await axios.get('/pets/');
       const categoriesRes = await axios.get('/categories/');
+      const petTypesRes = await axios.get('/pet-types/');
       const breedsRes = await axios.get('/pet-breeds/');
       setStats({
         orders: ordersRes.data?.length || 0,
         products: productsRes.data?.length || 0,
         pets: petsRes.data?.length || 0,
         categories: categoriesRes.data?.length || 0,
+        petTypes: petTypesRes.data?.length || 0,
         petBreeds: breedsRes.data?.length || 0,
       });
       setRecentOrders((ordersRes.data || []).slice(-5).reverse());

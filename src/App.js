@@ -100,22 +100,54 @@ function AppRoutes() {
     });
   };
 
-  const handleRemoveFromCart = (itemId, itemType) => {
-    setCartItems((currentItems) => currentItems.filter((item) => !(item.id === itemId && item.item_type === itemType)));
+  const handleRemoveFromCart = async (itemId, itemType) => {
+    const itemToRemove = cartItems.find((item) => (item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType);
+    if (itemToRemove?.cart_item_id) {
+      try {
+        await axios.delete(`/cart/${itemToRemove.cart_item_id}`);
+      } catch (error) {
+        console.error('Failed to remove item from cart API:', error);
+      }
+    }
+    setCartItems((currentItems) =>
+      currentItems.filter(
+        (item) => !(
+          (item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType
+        )
+      )
+    );
   };
 
   const handleClearCart = () => {
     setCartItems([]);
   };
 
-  const handleUpdateCartQuantity = (itemId, itemType, quantity) => {
+  const handleUpdateCartQuantity = async (itemId, itemType, quantity) => {
+    const itemToUpdate = cartItems.find((item) => (item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType);
+    const newQuantity = Math.max(0, quantity);
+
+    // Update local state optimistically
     setCartItems((currentItems) => {
       const updatedItems = currentItems.map((item) => {
-        if (item.id !== itemId || item.item_type !== itemType) return item;
-        return { ...item, quantity: Math.max(1, quantity) };
+        if ((item.id === itemId || item.cart_item_id === itemId) && item.item_type === itemType) {
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
       });
       return updatedItems.filter((item) => item.quantity > 0);
     });
+
+    if (itemToUpdate?.cart_item_id) {
+      try {
+        if (newQuantity <= 0) {
+          await axios.delete(`/cart/${itemToUpdate.cart_item_id}`);
+        } else {
+          await axios.put(`/cart/${itemToUpdate.cart_item_id}`, { quantity: newQuantity });
+        }
+      } catch (error) {
+        console.error('Failed to update cart quantity API:', error);
+      }
+    }
   };
 
   return (

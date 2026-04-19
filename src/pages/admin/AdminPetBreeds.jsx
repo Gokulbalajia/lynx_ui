@@ -34,6 +34,7 @@ const AdminPetBreeds = () => {
     try {
       const breedsRes = await axios.get('/pet-breeds/');
       const typesRes = await axios.get('/pet-types/');
+      console.log('Loaded breeds:', breedsRes.data); // Debug log
       setBreeds(breedsRes.data || []);
       setPetTypes(typesRes.data || []);
     } catch (err) {
@@ -67,7 +68,7 @@ const AdminPetBreeds = () => {
       name: breed.name || '',
       description: breed.description || '',
       pet_type_id: breed.pet_type_id || breed.pet_type?.id || '',
-      is_active: breed.is_active ?? true,
+      is_active: true, // Force active when editing
     });
     setShowForm(true);
   };
@@ -96,9 +97,12 @@ const AdminPetBreeds = () => {
       is_active: form.is_active,
     };
 
+    console.log('Sending payload:', payload); // Debug log
+
     try {
       if (editingItem) {
-        await axios.put(`/pet-breeds/${editingItem.id}`, payload);
+        const response = await axios.put(`/pet-breeds/${editingItem.id}`, payload);
+        console.log('PUT response:', response.data); // Debug log
         addToast('Breed updated successfully!', 'success');
       } else {
         await axios.post('/pet-breeds/', payload);
@@ -194,7 +198,6 @@ const AdminPetBreeds = () => {
                 <th className="px-4 py-4 text-zinc-400">Breed</th>
                 <th className="px-4 py-4 text-zinc-400">Pet type</th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
-                <th className="px-4 py-4 text-zinc-400">Status</th>
                 <th className="px-4 py-4 text-zinc-400">Actions</th>
               </tr>
             </thead>
@@ -206,12 +209,11 @@ const AdminPetBreeds = () => {
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
-                    <td className="px-4 py-4">&nbsp;</td>
                   </tr>
                 ))
               ) : filteredBreeds.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-10 text-center text-zinc-500">
+                  <td colSpan="4" className="px-4 py-10 text-center text-zinc-500">
                     No breeds found.
                   </td>
                 </tr>
@@ -221,11 +223,6 @@ const AdminPetBreeds = () => {
                     <td className="px-4 py-4 font-semibold text-white">{breed.name}</td>
                     <td className="px-4 py-4 text-zinc-300">{breed.pet_type?.name || breed.pet_type_id || 'Unknown'}</td>
                     <td className="px-4 py-4 text-zinc-300">{breed.description || 'No description'}</td>
-                    <td className="px-4 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${breed.is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
-                        {breed.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
                     <td className="px-4 py-4 text-sm text-zinc-300">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -234,6 +231,14 @@ const AdminPetBreeds = () => {
                           className="inline-flex items-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-600/10 px-3 py-2 text-blue-300 hover:bg-blue-600/20"
                         >
                           <Pencil size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(breed)}
+                          disabled={submitting}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-600/10 px-3 py-2 text-red-300 hover:bg-red-600/20 disabled:opacity-50"
+                        >
+                          {submitting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
                         </button>
                       </div>
                     </td>

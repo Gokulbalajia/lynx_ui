@@ -166,16 +166,13 @@ const AdminPets = () => {
       stock: Number(form.stock),
       description: form.description,
       is_available: form.is_available,
-    };
-
-    if (!editingItem) {
-      payload.images = [
+      images: [
         {
           image_url: imageUrl,
           is_primary: true,
         },
-      ];
-    }
+      ],
+    };
 
     try {
       if (editingItem) {

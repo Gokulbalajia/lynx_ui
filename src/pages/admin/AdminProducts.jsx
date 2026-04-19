@@ -160,31 +160,28 @@ const AdminProducts = () => {
       category_id: form.category_id,
       short_description: form.short_description,
       is_active: form.is_active,
-    };
-
-    if (!editingItem) {
-      payload.variants = [
+      variants: [
         {
           sku: form.sku,
           price: Number(form.price),
           stock: Number(form.stock),
         },
-      ];
-      payload.images = [
+      ],
+      images: [
         {
           image_url: imageUrl,
           is_primary: true,
         },
-      ];
-      payload.details = {
+      ],
+      details: {
         ingredients_material: '',
         pet_species_tags: [],
         lifestyle_tags: [],
         weight: '',
         flavor: '',
         expiry_date: null,
-      };
-    }
+      },
+    };
 
     try {
       if (editingItem) {
