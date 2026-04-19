@@ -222,6 +222,24 @@ const PetDetailPage = ({ onAddToCart }) => {
     window.open(url, '_blank');
   };
 
+  if (loading) {
+    return <div className="min-h-screen bg-black p-8 text-white">Loading pet details…</div>;
+  }
+
+  if (!pet) {
+    return (
+      <div className="min-h-screen bg-black p-8 text-white">
+        <p>Pet not found.</p>
+        <button
+          onClick={() => navigate('/pets')}
+          className="mt-4 bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-full text-white"
+        >
+          Back to pets
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Back Link */}
