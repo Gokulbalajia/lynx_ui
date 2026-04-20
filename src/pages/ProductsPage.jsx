@@ -22,7 +22,7 @@ const SPECIES_STYLES = {
 };
 
 const PRICE_MIN = 0;
-const PRICE_MAX = 5000;
+const PRICE_MAX = 100000;
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
@@ -129,8 +129,12 @@ const ProductsPage = ({ onAddToCart }) => {
 
   const categoryFilteredProducts = useMemo(() => {
     return baseProducts.filter((product) => {
+      // If no categories are selected (cleared filters), show all
       if (!selectedCategoryIds.length) return true;
-      return selectedCategoryIds.some((id) => id?.toString() === product.category_id?.toString());
+      
+      // If we have selected categories, only show products that match OR have no category (uncategorized)
+      // This ensures new products with missing category associations aren't hidden from the main view.
+      return !product.category_id || selectedCategoryIds.some((id) => id?.toString() === product.category_id?.toString());
     });
   }, [baseProducts, selectedCategoryIds]);
 

@@ -117,7 +117,7 @@ const AdminProducts = () => {
     const payload = {
       name: form.name,
       brand: form.brand,
-      category_id: Number(form.category_id),
+      category_id: form.category_id,
       short_description: form.short_description,
       is_active: form.is_active,
       variants: [
