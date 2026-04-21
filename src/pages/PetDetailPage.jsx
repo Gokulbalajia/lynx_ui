@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Heart, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, X, Syringe, Home, Utensils, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getPetImage, normalizeImagePath } from '../utils/assetUtils';
 
 const PetCard = ({ pet, onAddToCart }) => {
   const navigate = useNavigate();
@@ -20,18 +21,12 @@ const PetCard = ({ pet, onAddToCart }) => {
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden group hover:border-blue-500/50 transition-all flex-shrink-0 w-64">
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {primaryImage ? (
-          <img
-            src={primaryImage.image_url}
-            alt={pet.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-            <Heart size={48} className="text-zinc-600" />
-          </div>
-        )}
+      <div className="relative aspect-[4/3] overflow-hidden bg-zinc-950">
+        <img
+          src={getPetImage(pet)}
+          alt={pet.name}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
         <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold ${
           pet.is_available ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
         }`}>
@@ -71,7 +66,7 @@ const PetCard = ({ pet, onAddToCart }) => {
               pet_id: pet.id,
               id: pet.id,
               name: pet.name,
-              img: primaryImage?.image_url || '',
+              img: getPetImage(pet),
               price: parseFloat(pet.price),
               quantity: 1,
               category: pet.pet_type?.name || pet.pet_type || 'Pet',
@@ -209,7 +204,7 @@ const PetDetailPage = ({ onAddToCart }) => {
       pet_id: pet.id,
       id: pet.id,
       name: pet.name,
-      img: pet.images?.[0]?.image_url || '',
+      img: getPetImage(pet),
       price: parseFloat(pet.price),
       quantity,
       category: pet.pet_type?.name || pet.pet_type || 'Pet',
@@ -259,13 +254,13 @@ const PetDetailPage = ({ onAddToCart }) => {
           <div className="space-y-4">
             {/* Main Image */}
             <div
-              className="relative rounded-xl overflow-hidden cursor-pointer"
+              className="relative rounded-2xl overflow-hidden cursor-pointer bg-zinc-950 border border-zinc-800"
               onClick={() => setLightboxOpen(true)}
             >
               <img
-                src={pet.images?.[currentImageIndex]?.image_url || '/images/placeholder.jpg'}
+                src={mainImage?.image_url || getPetImage(pet)}
                 alt={pet.name}
-                className="w-full h-96 object-cover"
+                className="w-full h-[480px] object-cover transition duration-500 hover:scale-[1.03]"
               />
               <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all flex items-center justify-center">
                 <div className="opacity-0 hover:opacity-100 transition-opacity bg-white/20 backdrop-blur-sm rounded-full p-3">
@@ -275,18 +270,18 @@ const PetDetailPage = ({ onAddToCart }) => {
             </div>
 
             {/* Thumbnail Strip */}
-            {pet.images && pet.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
+            {pet.images && pet.images.length > 0 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
                 {pet.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      index === currentImageIndex ? 'border-blue-500' : 'border-zinc-700'
+                    className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all ${
+                      index === currentImageIndex ? 'border-blue-500 bg-blue-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
                     }`}
                   >
                     <img
-                      src={image.image_url}
+                      src={normalizeImagePath(image.image_url)}
                       alt={`${pet.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

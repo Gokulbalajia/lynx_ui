@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Heart, Filter, SortAsc, SortDesc, ShoppingCart, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getPetImage } from '../utils/assetUtils';
 
 const PetCardSkeleton = () => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden animate-pulse">
@@ -34,18 +35,13 @@ const PetCard = ({ pet, onAddToCart }) => {
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden group hover:border-blue-500/50 transition-all">
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {primaryImage ? (
-          <img
-            src={primaryImage.image_url}
-            alt={pet.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-            <Heart size={48} className="text-zinc-600" />
-          </div>
-        )}
+      <div className="relative aspect-[4/3] overflow-hidden bg-zinc-950">
+        <img
+          src={getPetImage(pet)}
+          alt={pet.name}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
         <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold ${
           pet.is_available ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
         }`}>

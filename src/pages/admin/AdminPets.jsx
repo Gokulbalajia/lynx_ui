@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
-import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
+import { PUBLIC_IMAGES, normalizeImagePath, getPetImage } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
@@ -41,6 +42,7 @@ const AdminPets = () => {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const { toasts, addToast, removeToast } = useAdminToast();
+  const [showAssetSelector, setShowAssetSelector] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -252,15 +254,22 @@ const AdminPets = () => {
                   return (
                     <tr key={pet.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                       <td className="px-4 py-4 max-w-[220px]">
-                        <div className="flex items-center gap-3">
-                          {pet.images?.[0]?.image_url ? (
-                            <img src={pet.images[0].image_url} alt={pet.name} className="h-12 w-12 rounded-xl object-cover" />
-                          ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-zinc-500">🐾</div>
-                          )}
+                        <div className="flex items-center gap-4">
+                          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#111111]">
+                            <img 
+                              src={getPetImage(pet)} 
+                              alt={pet.name} 
+                              className="h-full w-full object-cover transition-transform hover:scale-110" 
+                            />
+                            {!pet.images?.[0]?.image_url && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                                <span className="text-sm opacity-50">🐾</span>
+                              </div>
+                            )}
+                          </div>
                           <div>
-                            <p className="font-semibold text-white">{pet.name}</p>
-                            <p className="text-zinc-500 text-xs">{pet.breed?.name || pet.breed_id || 'Breed unknown'}</p>
+                            <p className="font-bold text-white text-base leading-tight mb-1">{pet.name}</p>
+                            <p className="text-zinc-500 text-xs font-medium tracking-wider uppercase">{pet.breed?.name || pet.breed_id || 'Breed unknown'}</p>
                           </div>
                         </div>
                       </td>
@@ -393,21 +402,89 @@ const AdminPets = () => {
                     className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Image URL</label>
-                  <input
-                    value={form.image_url}
-                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                  />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-zinc-300">Pet Image</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAssetSelector(!showAssetSelector)}
+                      className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      <ImageIcon size={14} />
+                      {showAssetSelector ? 'Close Gallery' : 'Browse Local Gallery'}
+                    </button>
+                  </div>
+
+                  {showAssetSelector && (
+                    <div className="rounded-2xl border border-[#2A2A2A] bg-[#0A0A0A] p-4">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-4 font-bold">Local Assets Library</p>
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        {PUBLIC_IMAGES.map((imgName) => (
+                          <button
+                            key={imgName}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, image_url: imgName });
+                              setShowAssetSelector(false);
+                            }}
+                            className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                              form.image_url === imgName ? 'border-emerald-500 shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]' : 'border-[#2A2A2A] hover:border-zinc-500'
+                            }`}
+                          >
+                            <img src={`/images/${imgName}`} alt={imgName} className="h-full w-full object-cover" title={imgName} />
+                            {form.image_url === imgName && (
+                              <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                                <div className="bg-emerald-500 rounded-full p-1 shadow-lg">
+                                  <Plus size={12} className="text-white rotate-45" />
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 rounded-2xl border border-[#2A2A2A]/50 bg-gradient-to-r from-[#0A0A0A] to-[#000000] p-4">
+                    <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-[#2A2A2A] bg-[#111111]">
+                      <img 
+                        src={form.image_url ? normalizeImagePath(form.image_url) : getPetImage(form)} 
+                        alt="preview" 
+                        className="h-full w-full object-cover" 
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">
+                        {form.image_url ? 'Custom Image Preview' : 'Smart Fallback Icon'}
+                      </p>
+                      <p className="text-sm text-zinc-300 truncate font-mono">
+                        {form.image_url || 'Using best match for pet name/type'}
+                      </p>
+                      {form.image_url && (
+                        <button 
+                          type="button" 
+                          onClick={() => setForm({ ...form, image_url: '' })}
+                          className="text-[10px] text-zinc-500 hover:text-red-400 mt-1 font-bold uppercase tracking-widest transition-colors"
+                        >
+                          Remove selection
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      value={form.image_url}
+                      onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                      placeholder="Enter image URL or select from gallery"
+                      className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] pl-4 pr-12 py-3.5 text-sm text-white outline-none focus:border-emerald-500 transition-all placeholder:text-zinc-600 font-medium"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                      <Search size={16} />
+                    </div>
+                  </div>
+                  </div>
                 </div>
-              </div>
-              {form.image_url && (
-                <div className="flex items-center gap-3 rounded-2xl border border-[#2A2A2A] bg-[#000000] p-3">
-                  <img src={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                  <p className="text-sm text-zinc-300">Image preview</p>
-                </div>
-              )}
               <div className="space-y-2">
                 <label className="text-sm text-zinc-300">Description</label>
                 <textarea

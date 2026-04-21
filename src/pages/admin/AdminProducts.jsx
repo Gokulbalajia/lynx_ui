@@ -3,7 +3,8 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
-import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { PUBLIC_IMAGES, normalizeImagePath, getProductImage, getRecommendedImages, PRODUCT_SORT_ORDER } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
@@ -34,6 +35,7 @@ const AdminProducts = () => {
   const [error, setError] = useState('');
   const { toasts, addToast, removeToast } = useAdminToast();
   const location = useLocation();
+  const [showAssetSelector, setShowAssetSelector] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -70,9 +72,25 @@ const AdminProducts = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) =>
-      `${product.name || ''} ${product.brand || ''}`.toLowerCase().includes(query.toLowerCase())
-    );
+    return products
+      .filter((product) =>
+        `${product.name || ''} ${product.brand || ''}`.toLowerCase().includes(query.toLowerCase())
+      )
+      .sort((a, b) => {
+        const indexA = PRODUCT_SORT_ORDER.findIndex(name => 
+          a.name?.toLowerCase().includes(name.toLowerCase()) || 
+          name.toLowerCase().includes(a.name?.toLowerCase())
+        );
+        const indexB = PRODUCT_SORT_ORDER.findIndex(name => 
+          b.name?.toLowerCase().includes(name.toLowerCase()) || 
+          name.toLowerCase().includes(b.name?.toLowerCase())
+        );
+
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return parseInt(b.id || 0, 10) - parseInt(a.id || 0, 10);
+      });
   }, [products, query]);
 
   const openForm = () => {
@@ -196,6 +214,13 @@ const AdminProducts = () => {
 
   return (
     <AdminLayout title="Products" subtitle="Manage your product catalog.">
+      {/* Recommended images logic hook */}
+      {(() => {
+        // This is a bit of a hack to get useMemo-like behavior in the main component scope for the form
+        // but since we are already inside the component, we just calculate it.
+        // For better performance, we could put this in a sub-component.
+      })()}
+
       <div className="space-y-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -263,15 +288,22 @@ const AdminProducts = () => {
                   return (
                     <tr key={product.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                       <td className="px-4 py-4 max-w-[220px]">
-                        <div className="flex items-center gap-3">
-                          {product.images?.[0]?.image_url ? (
-                            <img src={product.images[0].image_url} alt={product.name} className="h-12 w-12 rounded-xl object-cover" />
-                          ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-zinc-500">🛍️</div>
-                          )}
+                        <div className="flex items-center gap-4">
+                          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#111111]">
+                            <img 
+                              src={getProductImage(product)} 
+                              alt={product.name} 
+                              className="h-full w-full object-cover transition-transform hover:scale-110" 
+                            />
+                            {!product.images?.[0]?.image_url && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                                <ImageIcon size={16} className="text-zinc-500/50" />
+                              </div>
+                            )}
+                          </div>
                           <div>
-                            <p className="font-semibold text-white">{product.name}</p>
-                            <p className="text-zinc-500 text-xs">{product.sku || variant.sku || '—'}</p>
+                            <p className="font-bold text-white text-base leading-tight mb-1">{product.name}</p>
+                            <p className="text-zinc-500 text-xs font-medium tracking-wider uppercase">{product.sku || variant.sku || '—'}</p>
                           </div>
                         </div>
                       </td>
@@ -400,20 +432,128 @@ const AdminProducts = () => {
                   />
                 </div>
               )}
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Image URL</label>
-                <input
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                />
-              </div>
-              {form.image_url && (
-                <div className="flex items-center gap-3 rounded-2xl border border-[#2A2A2A] bg-[#000000] p-3">
-                  <img src={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                  <p className="text-sm text-zinc-300">Image preview</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-zinc-300">Product Image</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAssetSelector(!showAssetSelector)}
+                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <ImageIcon size={14} />
+                    {showAssetSelector ? 'Close Gallery' : 'Browse Local Gallery'}
+                  </button>
                 </div>
-              )}
+
+                {showAssetSelector && (
+                  <div className="rounded-2xl border border-[#2A2A2A] bg-[#0A0A0A] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-4 font-bold">Local Assets Library</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                      {PUBLIC_IMAGES.map((imgName) => (
+                        <button
+                          key={imgName}
+                          type="button"
+                          onClick={() => {
+                            setForm({ ...form, image_url: imgName });
+                            setShowAssetSelector(false);
+                          }}
+                          className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                            form.image_url === imgName ? 'border-blue-500' : 'border-[#2A2A2A] hover:border-zinc-500'
+                          }`}
+                        >
+                          <img src={`/images/${imgName}`} alt={imgName} className="h-full w-full object-cover" title={imgName} />
+                          {form.image_url === imgName && (
+                            <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                              <div className="bg-blue-500 rounded-full p-1 shadow-lg">
+                                <Plus size={12} className="text-white rotate-45" />
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Related / Recommended Images Section */}
+                {(() => {
+                  const recommendations = getRecommendedImages(form);
+                  if (recommendations.length > 0) {
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 px-1">
+                          <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-blue-400/80">Related Images Found</p>
+                        </div>
+                        <div className="grid grid-cols-5 gap-3">
+                          {recommendations.slice(0, 5).map((imgName) => (
+                            <button
+                              key={imgName}
+                              type="button"
+                              onClick={() => setForm({ ...form, image_url: imgName })}
+                              className={`group relative aspect-square overflow-hidden rounded-2xl border-2 transition-all duration-300 ${
+                                form.image_url === imgName 
+                                  ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] scale-[1.05]' 
+                                  : 'border-zinc-800/50 hover:border-blue-500/50 hover:scale-[1.02]'
+                              }`}
+                            >
+                              <img src={`/images/${imgName}`} alt="related" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                              {form.image_url === imgName && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-blue-500/20">
+                                  <div className="bg-blue-500 rounded-full p-1 shadow-lg transform scale-100 animate-in zoom-in-50">
+                                    <Plus size={10} className="text-white rotate-45" />
+                                  </div>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                <div className="flex items-center gap-4 rounded-2xl border border-[#2A2A2A]/50 bg-gradient-to-r from-[#0A0A0A] to-[#000000] p-4">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-[#2A2A2A] bg-[#111111]">
+                    <img 
+                      src={form.image_url ? normalizeImagePath(form.image_url) : getProductImage(form)} 
+                      alt="preview" 
+                      className="h-full w-full object-cover" 
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">
+                      {form.image_url ? 'Custom Image Preview' : 'Smart Fallback Icon'}
+                    </p>
+                    <p className="text-sm text-zinc-300 truncate font-mono">
+                      {form.image_url || 'Using best match for product name'}
+                    </p>
+                    {form.image_url && (
+                      <button 
+                        type="button" 
+                        onClick={() => setForm({ ...form, image_url: '' })}
+                        className="text-[10px] text-zinc-500 hover:text-red-400 mt-1 font-bold uppercase tracking-widest transition-colors"
+                      >
+                        Remove selection
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <input
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    placeholder="Enter image URL or select from gallery"
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] pl-4 pr-12 py-3.5 text-sm text-white outline-none focus:border-blue-500 transition-all placeholder:text-zinc-600 font-medium"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                    <Search size={16} />
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center gap-3">
                 <button
                   type="submit"

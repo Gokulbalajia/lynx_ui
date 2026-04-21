@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Package, Search, Heart, X, ShoppingCart, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getProductImage, PRODUCT_SORT_ORDER } from '../utils/assetUtils';
 
 const SEED_CATEGORIES = [
   { id: 'cat-1', name: 'Food & Treats', description: 'Premium nutrition for every pet' },
@@ -186,8 +187,21 @@ const ProductsPage = ({ onAddToCart }) => {
             return getLowestVariantPrice(b) - getLowestVariantPrice(a);
           case 'name':
             return a.name.localeCompare(b.name);
-          default:
+          default: {
+            const indexA = PRODUCT_SORT_ORDER.findIndex(name => 
+              a.name?.toLowerCase().includes(name.toLowerCase()) || 
+              name.toLowerCase().includes(a.name?.toLowerCase())
+            );
+            const indexB = PRODUCT_SORT_ORDER.findIndex(name => 
+              b.name?.toLowerCase().includes(name.toLowerCase()) || 
+              name.toLowerCase().includes(b.name?.toLowerCase())
+            );
+
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
             return parseInt(b.id, 10) - parseInt(a.id, 10);
+          }
         }
       });
   }, [categoryFilteredProducts, selectedBrands, selectedSpecies, priceRange, stockOnly, searchQuery, sortBy]);
@@ -490,16 +504,13 @@ const ProductsPage = ({ onAddToCart }) => {
 
                   return (
                     <div key={product.id} className="rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden">
-                      <Link to={`/products/${product.id}`} className="block relative overflow-hidden bg-zinc-800 h-[260px]">
-                        {product.images?.length > 0 ? (
-                          <img
-                            src={product.images.find((image) => image.is_primary)?.image_url || product.images[0].image_url}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition duration-500 hover:scale-105"
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-4xl text-zinc-600">🛍️</div>
-                        )}
+                      <Link to={`/products/${product.id}`} className="block relative overflow-hidden bg-zinc-900 h-[280px]">
+                        <img
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition duration-500 hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>
                       <div className="p-5 space-y-4">
                         <div className="flex items-start justify-between gap-3">
