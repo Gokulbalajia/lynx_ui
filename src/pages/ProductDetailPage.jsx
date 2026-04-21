@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Copy, MessageCircle, Star, X } from 'lucide-react';
+import { getProductImage, normalizeImagePath } from '../utils/assetUtils';
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
@@ -136,7 +137,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
       product_variant_id: selectedVariant.id,
       id: product.id,
       name: product.name,
-      img: product.images?.[0]?.image_url || '',
+      img: getProductImage(product),
       price: parseFloat(selectedVariant.price || '0'),
       quantity,
       category: product.category
@@ -172,7 +173,10 @@ const ProductDetailPage = ({ onAddToCart }) => {
     );
   }
 
-  const images = product.images?.length ? product.images : [{ image_url: '/images/placeholder.jpg', is_primary: true }];
+  const images = product.images?.length 
+    ? product.images.map(img => ({ ...img, image_url: normalizeImagePath(img.image_url) })) 
+    : [{ image_url: getProductImage(product), is_primary: true }];
+  
   const mainImage = images[mainImageIndex] || images[0];
   const selectedVariantStock = selectedVariant?.stock ?? 0;
 
@@ -429,7 +433,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
                 >
                   <div className="h-40 overflow-hidden bg-zinc-800">
                     <img
-                      src={related.images?.find((img) => img.is_primary)?.image_url || related.images?.[0]?.image_url || '/images/placeholder.jpg'}
+                      src={getProductImage(related)}
                       alt={related.name}
                       className="h-full w-full object-cover"
                     />

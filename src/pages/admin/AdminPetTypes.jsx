@@ -200,7 +200,10 @@ const AdminPetTypes = () => {
                 filteredTypes.map((typeItem) => (
                   <tr key={typeItem.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{typeItem.name}</td>
-                    <td className="px-4 py-4 text-zinc-300">{typeItem.description || 'No description'}</td>
+                    <td className="px-4 py-4 text-zinc-300">
+                      {typeItem.description || typeItem.short_description || typeItem.desc || 'No description'}
+                    </td>
+
                     <td className="px-4 py-4">
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${typeItem.is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
                         {typeItem.is_active ? 'Active' : 'Inactive'}
