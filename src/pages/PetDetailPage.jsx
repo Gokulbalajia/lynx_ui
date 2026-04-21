@@ -5,7 +5,23 @@ import { ArrowLeft, Heart, ShoppingCart, MessageCircle, ChevronLeft, ChevronRigh
 import { useAuth } from '../contexts/AuthContext';
 import { getPetImage, normalizeImagePath } from '../utils/assetUtils';
 
-const PetCard = ({ pet, onAddToCart }) => {
+const PetCard = ({ pet, onAddToCart, petTypes = [] }) => {
+  const getPetTypeName = (item) => {
+    if (!item) return null;
+    if (item.pet_types?.name) return item.pet_types.name;
+    if (item.pet_type?.name) return item.pet_type.name;
+    if (item.pet_type_name) return item.pet_type_name;
+    if (item.type_name) return item.type_name;
+    if (item.species) return item.species;
+    const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+    if (!petTypeId) return null;
+    const match = petTypes.find(t => String(t.id) === String(petTypeId));
+    return match ? match.name : String(petTypeId).slice(0, 8);
+  };
+
+
+
+
   const navigate = useNavigate();
   const primaryImage = pet.images?.find(img => img.is_primary) || pet.images?.[0];
 
@@ -35,7 +51,11 @@ const PetCard = ({ pet, onAddToCart }) => {
       </div>
       <div className="p-4">
         <h3 className="font-bold text-white text-lg mb-1">{pet.name}</h3>
-        <p className="text-zinc-500 text-sm mb-2">{pet.breed?.name || pet.breed || 'Unknown breed'} • {pet.pet_type?.name || pet.pet_type || 'Unknown type'}</p>
+        <p className="text-zinc-500 text-sm mb-2">
+          {pet.breed?.name || pet.breed || 'Unknown breed'} • {getPetTypeName(pet) || 'Unknown type'}
+        </p>
+
+
         <p className="text-zinc-400 text-sm mb-2">{formatAge(pet.age_months)}</p>
         <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold text-white ${genderColor} mb-3`}>
           {pet.gender}
@@ -69,8 +89,10 @@ const PetCard = ({ pet, onAddToCart }) => {
               img: getPetImage(pet),
               price: parseFloat(pet.price),
               quantity: 1,
-              category: pet.pet_type?.name || pet.pet_type || 'Pet',
+              category: getPetTypeName(pet) || 'Pet',
             })}
+
+
             disabled={!pet.is_available || pet.stock === 0}
             className={`w-full font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
               pet.is_available && pet.stock > 0
@@ -92,27 +114,36 @@ const PetDetailPage = ({ onAddToCart }) => {
   const navigate = useNavigate();
   const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const [pet, setPet] = useState(null);
+  const [petTypes, setPetTypes] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const fetchPet = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/pets/${id}`);
-        setPet(response.data);
+        const [petRes, typesRes] = await Promise.all([
+          axios.get(`/pets/${id}`),
+          axios.get('/pet-types/')
+        ]);
+        setPet(petRes.data);
+        if (Array.isArray(typesRes.data)) {
+          setPetTypes(typesRes.data);
+        }
       } catch (error) {
-        console.error('Failed to fetch pet:', error);
+        console.error('Failed to fetch data:', error);
         setPet(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPet();
+    fetchData();
   }, [id]);
+
 
   const formatAge = (months) => {
     if (months === 0) return 'Newborn';
@@ -122,7 +153,25 @@ const PetDetailPage = ({ onAddToCart }) => {
     return remainingMonths > 0 ? `${years} yr ${remainingMonths} mo` : `${years} yr`;
   };
 
+  const getPetTypeName = (item) => {
+    if (!item) return null;
+    if (item.pet_types?.name) return item.pet_types.name;
+    if (item.pet_type?.name) return item.pet_type.name;
+    if (item.pet_type_name) return item.pet_type_name;
+    if (item.type_name) return item.type_name;
+    if (item.species) return item.species;
+    const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+    if (!petTypeId) return null;
+    const match = petTypes.find(t => String(t.id) === String(petTypeId));
+    return match ? match.name : String(petTypeId).slice(0, 8);
+  };
+
+
+
   const genderColor = pet?.gender === 'Male' ? 'text-blue-400' : pet?.gender === 'Female' ? 'text-pink-400' : 'text-zinc-400';
+
+  const mainImage = pet?.images?.[currentImageIndex];
+
 
   const getHealthCareInfo = (petType, ageMonths) => {
     const info = {
@@ -146,7 +195,12 @@ const PetDetailPage = ({ onAddToCart }) => {
     return info;
   };
 
-  const healthInfo = getHealthCareInfo(pet?.pet_type, pet?.age_months);
+  const healthInfo = getHealthCareInfo(
+    getPetTypeName(pet),
+    pet?.age_months
+  );
+
+
 
   const [relatedPets, setRelatedPets] = useState([]);
 
@@ -173,7 +227,8 @@ const PetDetailPage = ({ onAddToCart }) => {
     };
 
     fetchRelatedPets();
-  }, [pet?.pet_type, pet?.id]);
+  }, [pet?.pet_type, pet?.id, pet?.pet_type_id]);
+
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -207,8 +262,10 @@ const PetDetailPage = ({ onAddToCart }) => {
       img: getPetImage(pet),
       price: parseFloat(pet.price),
       quantity,
-      category: pet.pet_type?.name || pet.pet_type || 'Pet',
+      category: getPetTypeName(pet) || 'Pet',
     });
+
+
   };
 
   const openWhatsApp = () => {
@@ -312,7 +369,9 @@ const PetDetailPage = ({ onAddToCart }) => {
                 <span className="text-zinc-400">🐾</span>
                 <div>
                   <p className="text-zinc-500 text-sm">Type</p>
-                  <p className="text-white font-semibold">{pet.pet_type?.name || pet.pet_type || 'Unknown type'}</p>
+                  <p className="text-white font-semibold">{getPetTypeName(pet) || 'Unknown type'}</p>
+
+
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -454,8 +513,9 @@ const PetDetailPage = ({ onAddToCart }) => {
             <h2 className="text-2xl font-bold text-white mb-6">You might also like</h2>
             <div className="flex gap-6 overflow-x-auto pb-4">
               {relatedPets.map(relatedPet => (
-                <PetCard key={relatedPet.id} pet={relatedPet} onAddToCart={onAddToCart} />
+                <PetCard key={relatedPet.id} pet={relatedPet} onAddToCart={onAddToCart} petTypes={petTypes} />
               ))}
+
             </div>
           </div>
         )}

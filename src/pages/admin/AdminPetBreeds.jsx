@@ -11,6 +11,7 @@ const defaultForm = {
   is_active: true,
 };
 
+
 const AdminPetBreeds = () => {
   const [breeds, setBreeds] = useState([]);
   const [petTypes, setPetTypes] = useState([]);
@@ -146,7 +147,26 @@ const AdminPetBreeds = () => {
     }
   };
 
+  const getPetTypeName = (item) => {
+    if (!item) return null;
+    // Check both singular and plural forms (backend consistency)
+    if (item.pet_types?.name) return item.pet_types.name;
+    if (item.pet_type?.name) return item.pet_type.name;
+    if (item.pet_type_name) return item.pet_type_name;
+    if (item.type_name) return item.type_name;
+    if (item.species) return item.species;
+    
+    const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+    if (!petTypeId) return null;
+    
+    const match = petTypes.find(t => String(t.id) === String(petTypeId));
+    return match ? match.name : String(petTypeId).slice(0, 8);
+  };
+
+
+
   return (
+
     <AdminLayout title="Pet Breeds" subtitle="Manage breed options for pets.">
       <div className="space-y-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -181,8 +201,9 @@ const AdminPetBreeds = () => {
             <thead className="border-b border-[#2A2A2A] bg-[#000000]">
               <tr>
                 <th className="px-4 py-4 text-zinc-400">Breed</th>
-                <th className="px-4 py-4 text-zinc-400">Pet type</th>
+                <th className="px-4 py-4 text-zinc-400">Pet Type </th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
+
                 <th className="px-4 py-4 text-zinc-400">Status</th>
                 <th className="px-4 py-4 text-zinc-400">Actions</th>
               </tr>
@@ -208,8 +229,15 @@ const AdminPetBreeds = () => {
                 filteredBreeds.map((breed) => (
                   <tr key={breed.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{breed.name}</td>
-                    <td className="px-4 py-4 text-zinc-300">{breed.pet_type?.name || breed.pet_type_id || 'Unknown'}</td>
-                    <td className="px-4 py-4 text-zinc-300">{breed.description || 'No description'}</td>
+                    <td className="px-4 py-4 text-zinc-300">
+                      {getPetTypeName(breed) || 'Unknown'}
+                    </td>
+
+
+                    <td className="px-4 py-4 text-zinc-300">
+                      {breed.description || breed.short_description || breed.desc || 'No description'}
+                    </td>
+
                     <td className="px-4 py-4">
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${breed.is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
                         {breed.is_active ? 'Active' : 'Inactive'}
@@ -263,14 +291,16 @@ const AdminPetBreeds = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Pet type</label>
+                  <label className="text-sm text-zinc-300">Pet Type Name *</label>
                   <select
+
                     value={form.pet_type_id}
                     onChange={(e) => setForm({ ...form, pet_type_id: e.target.value })}
                     className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                   >
-                    <option value="">Select pet type</option>
+                    <option value="">Select pet type name</option>
                     {petTypes.map((type) => (
+
                       <option key={type.id} value={type.id}>
                         {type.name}
                       </option>

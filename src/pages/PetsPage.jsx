@@ -18,7 +18,23 @@ const PetCardSkeleton = () => (
   </div>
 );
 
-const PetCard = ({ pet, onAddToCart }) => {
+const PetCard = ({ pet, onAddToCart, petTypes = [] }) => {
+  const getPetTypeName = (item) => {
+    if (!item) return null;
+    if (item.pet_types?.name) return item.pet_types.name;
+    if (item.pet_type?.name) return item.pet_type.name;
+    if (item.pet_type_name) return item.pet_type_name;
+    if (item.type_name) return item.type_name;
+    if (item.species) return item.species;
+    const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+    if (!petTypeId) return null;
+    const match = petTypes.find(t => String(t.id) === String(petTypeId));
+    return match ? match.name : String(petTypeId).slice(0, 8);
+  };
+
+
+
+
   const navigate = useNavigate();
   const { isAuthenticated, user, userId, isAdmin } = useAuth();
   const primaryImage = pet.images?.find(img => img.is_primary) || pet.images?.[0];
@@ -50,7 +66,11 @@ const PetCard = ({ pet, onAddToCart }) => {
       </div>
       <div className="p-4">
         <h3 className="font-bold text-white text-lg mb-1">{pet.name}</h3>
-        <p className="text-zinc-500 text-sm mb-2">{pet.breed?.name || pet.breed || 'Unknown breed'} • {pet.pet_type?.name || pet.pet_type || 'Unknown type'}</p>
+        <p className="text-zinc-500 text-sm mb-2">
+          {pet.breed?.name || pet.breed || 'Unknown breed'} • {getPetTypeName(pet) || 'Unknown type'}
+        </p>
+
+
         <p className="text-zinc-400 text-sm mb-2">{formatAge(pet.age_months)}</p>
         <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold text-white ${genderColor} mb-3`}>
           {pet.gender}
@@ -110,8 +130,10 @@ const PetCard = ({ pet, onAddToCart }) => {
                   img: primaryImage?.image_url || '',
                   price: parseFloat(pet.price),
                   quantity: 1,
-                  category: pet.pet_type?.name || pet.pet_type || 'Pet',
+                  category: getPetTypeName(pet) || 'Pet',
                 });
+
+
               }}
               disabled={!pet.is_available || pet.stock === 0}
               className={`w-full font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
@@ -132,6 +154,8 @@ const PetCard = ({ pet, onAddToCart }) => {
 
 const PetsPage = ({ onAddToCart }) => {
   const [pets, setPets] = useState([]);
+  const [petTypes, setPetTypes] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     type: 'All',
@@ -141,25 +165,51 @@ const PetsPage = ({ onAddToCart }) => {
   });
 
   useEffect(() => {
-    const fetchPets = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('/pets/');
-        if (Array.isArray(response.data)) {
-          setPets(response.data);
+        const [petsRes, typesRes] = await Promise.all([
+          axios.get('/pets/'),
+          axios.get('/pet-types/')
+        ]);
+        
+        if (Array.isArray(petsRes.data)) {
+          setPets(petsRes.data);
+        }
+        if (Array.isArray(typesRes.data)) {
+          setPetTypes(typesRes.data);
         }
       } catch (error) {
-        console.error('Failed to fetch pets:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPets();
+    fetchData();
   }, []);
 
+
   const filteredAndSortedPets = useMemo(() => {
+    const getPetTypeName = (item) => {
+      if (!item) return null;
+      if (item.pet_types?.name) return item.pet_types.name;
+      if (item.pet_type?.name) return item.pet_type.name;
+      if (item.pet_type_name) return item.pet_type_name;
+      if (item.type_name) return item.type_name;
+      if (item.species) return item.species;
+      const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+      if (!petTypeId) return null;
+      const match = petTypes.find(t => String(t.id) === String(petTypeId));
+      return match ? match.name : String(petTypeId).slice(0, 8);
+    };
+
+
+
     let filtered = pets.filter(pet => {
-      if (filters.type !== 'All' && (pet.pet_type?.name || pet.pet_type) !== filters.type) return false;
+      const typeName = getPetTypeName(pet);
+      if (filters.type !== 'All' && typeName !== filters.type) return false;
+
+
       if (filters.gender !== 'All' && pet.gender !== filters.gender) return false;
       if (filters.availableOnly && !pet.is_available) return false;
       return true;
@@ -282,8 +332,9 @@ const PetsPage = ({ onAddToCart }) => {
         ) : filteredAndSortedPets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredAndSortedPets.map(pet => (
-              <PetCard key={pet.id} pet={pet} onAddToCart={onAddToCart} />
+              <PetCard key={pet.id} pet={pet} onAddToCart={onAddToCart} petTypes={petTypes} />
             ))}
+
           </div>
         ) : (
           <div className="text-center py-16">

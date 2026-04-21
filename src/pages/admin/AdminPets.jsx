@@ -75,6 +75,21 @@ const AdminPets = () => {
     return pets.filter((pet) => `${pet.name || ''} ${pet.gender || ''}`.toLowerCase().includes(query.toLowerCase()));
   }, [pets, query]);
 
+  const getPetTypeName = (item) => {
+    if (!item) return null;
+    if (item.pet_types?.name) return item.pet_types.name;
+    if (item.pet_type?.name) return item.pet_type.name;
+    if (item.pet_type_name) return item.pet_type_name;
+    if (item.type_name) return item.type_name;
+    if (item.species) return item.species;
+    const petTypeId = item.pet_type_id || (typeof item.pet_type === 'string' || typeof item.pet_type === 'number' ? item.pet_type : item.pet_type?.id);
+    if (!petTypeId) return null;
+    const match = petTypes.find(t => String(t.id) === String(petTypeId));
+    return match ? match.name : String(petTypeId).slice(0, 8);
+  };
+
+
+
   const openForm = () => {
     setEditingItem(null);
     setForm(defaultForm);
@@ -248,8 +263,8 @@ const AdminPets = () => {
                 </tr>
               ) : (
                 filteredPets.map((pet) => {
-                  const petType = petTypes.find((type) => type.id === pet.pet_type_id) || {};
                   const genderClass =
+
                     pet.gender === 'Female' ? 'bg-pink-600/10 text-pink-300 border border-pink-500/20' : pet.gender === 'Male' ? 'bg-blue-600/10 text-blue-300 border border-blue-500/20' : 'bg-[#111111] text-zinc-300 border border-[#2A2A2A]';
                   return (
                     <tr key={pet.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
@@ -273,7 +288,8 @@ const AdminPets = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-zinc-300">{petType.name || pet.pet_type_id?.toString().slice(0, 8) || 'Unknown'}</td>
+                      <td className="px-4 py-4 text-zinc-300">{getPetTypeName(pet) || 'Unknown'}</td>
+
                       <td className="px-4 py-4">
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${genderClass}`}>{pet.gender || 'Other'}</span>
                       </td>

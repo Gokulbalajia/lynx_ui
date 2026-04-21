@@ -200,7 +200,10 @@ const AdminCategories = () => {
                 filteredCategories.map((category) => (
                   <tr key={category.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{category.name}</td>
-                    <td className="px-4 py-4 text-zinc-300">{category.description || 'No description'}</td>
+                    <td className="px-4 py-4 text-zinc-300">
+                      {category.description || category.short_description || category.desc || 'No description'}
+                    </td>
+
                     <td className="px-4 py-4">
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${category.is_active ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
                         {category.is_active ? 'Active' : 'Inactive'}
