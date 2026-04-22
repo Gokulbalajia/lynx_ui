@@ -91,6 +91,7 @@ const AdminPetTypes = () => {
       name: form.name,
       description: form.description,
       image_url: form.image_url,
+      is_active: form.is_active,
     };
 
     try {
