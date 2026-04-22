@@ -17,10 +17,14 @@ const PRICE_MAX = 5000;
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${process.env.REACT_APP_API_URL || 'https://pet-shop-api-t1hm.onrender.com'}${url}`;
+// Helper to get image URL with fallback across multiple possible fields
+const getProductImage = (product) => {
+  return product.image_url || 
+         product.product_images?.find(img => img.is_primary)?.image_url || 
+         product.product_images?.[0]?.image_url || 
+         product.images?.find(img => img.is_primary)?.image_url || 
+         product.images?.[0]?.image_url || 
+         '';
 };
 
 const getLowestVariantPrice = (product) => {
@@ -256,7 +260,7 @@ const ProductsPage = ({ onAddToCart }) => {
         product_variant_id: variant.id,
         id: product.id,
         name: product.name,
-        img: product.images?.[0]?.image_url || '',
+        img: getProductImage(product),
         price: parseFloat(variant.price || '0'),
         quantity: 1,
         category: product.category
@@ -462,9 +466,9 @@ const ProductsPage = ({ onAddToCart }) => {
                   return (
                     <div key={product.id} className="rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden">
                       <Link to={`/products/${product.id}`} className="block relative overflow-hidden bg-zinc-800 h-[260px]">
-                        {product.images?.length > 0 ? (
+                        {getProductImage(product) ? (
                           <img
-                            src={getImageUrl(product.images.find((image) => image.is_primary)?.image_url || product.images[0].image_url)}
+                            src={getProductImage(product)}
                             alt={product.name}
                             className="w-full h-full object-cover transition duration-500 hover:scale-105"
                           />

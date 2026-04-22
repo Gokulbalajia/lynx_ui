@@ -63,22 +63,36 @@ const AdminPets = () => {
     setLoading(true);
     setError('');
     try {
-      const petsRes = await axios.get('/pets/');
-      const typesRes = await axios.get('/pet-types/');
-      const breedsRes = await axios.get('/pet-breeds/');
-      setPets(petsRes.data || []);
-      setPetTypes(typesRes.data || []);
-      setPetBreeds(breedsRes.data || []);
-    } catch (err) {
-      const status = err.response?.status;
-      const message =
-        status === 401 || status === 403
+      const [petsRes, typesRes, breedsRes] = await Promise.allSettled([
+        axios.get('/pets/'),
+        axios.get('/pet-types/'),
+        axios.get('/pet-breeds/'),
+      ]);
+
+      if (petsRes.status === 'fulfilled') {
+        setPets(petsRes.value.data || []);
+      } else {
+        const err = petsRes.reason;
+        const status = err.response?.status;
+        const msg = status === 401 || status === 403
           ? 'Session expired. Please log out and log in again.'
-          : status === 404
-          ? `Endpoint not found: ${err.config?.url}`
-          : `Failed to load: ${err.response?.data?.detail || err.message}`;
-      setError(message);
-      addToast(message, 'error');
+          : `Failed to load pets: ${err.response?.data?.detail || err.message}`;
+        setError(msg);
+        addToast(msg, 'error');
+      }
+
+      if (typesRes.status === 'fulfilled') {
+        setPetTypes(typesRes.value.data || []);
+      } else {
+        console.error('Failed to load pet types:', typesRes.reason?.message);
+      }
+
+      if (breedsRes.status === 'fulfilled') {
+        setPetBreeds(breedsRes.value.data || []);
+      } else {
+        console.error('Failed to load pet breeds:', breedsRes.reason?.message);
+      }
+
     } finally {
       setLoading(false);
     }
@@ -115,16 +129,28 @@ const AdminPets = () => {
     setShowForm(true);
   };
 
-  const uploadImageFile = async () => {
-    if (!selectedImageFile) return null;
+  const handleFileUpload = async (file) => {
+    if (!file) return;
 
     const uploadFormData = new FormData();
-    uploadFormData.append('file', selectedImageFile);
+    uploadFormData.append('file', file);
 
     setImageUploading(true);
     try {
       const response = await axios.post('/upload/upload-image', uploadFormData);
-      return response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+      const uploadedUrl = response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+      
+      if (uploadedUrl) {
+        setForm(prev => ({ ...prev, image_url: uploadedUrl }));
+        setSelectedImageFile(null);
+        setImagePreviewUrl('');
+        addToast('Image uploaded successfully!', 'success');
+      } else {
+        addToast('Failed to get URL from upload response.', 'error');
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      addToast('Image upload failed: ' + (err.response?.data?.detail || err.message), 'error');
     } finally {
       setImageUploading(false);
     }
@@ -147,14 +173,7 @@ const AdminPets = () => {
       return;
     }
 
-    let imageUrl = form.image_url || '';
-    if (selectedImageFile) {
-      const uploadedUrl = await uploadImageFile();
-      if (!uploadedUrl) {
-        throw new Error('Image upload failed.');
-      }
-      imageUrl = uploadedUrl;
-    }
+    const imageUrl = form.image_url || '';
 
     const payload = {
       name: form.name,
@@ -313,11 +332,23 @@ const AdminPets = () => {
                           )}
                           <div>
                             <p className="font-semibold text-white">{pet.name}</p>
-                            <p className="text-zinc-500 text-xs">{pet.breed?.name || pet.breed_id || 'Breed unknown'}</p>
+                            <p className="text-zinc-500 text-xs">
+                              {pet.breed?.name || 
+                               (typeof pet.breed === 'string' ? pet.breed : null) || 
+                               petBreeds.find(b => b.id === pet.breed_id)?.name || 
+                               pet.breed_id || 
+                               'Breed unknown'}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-zinc-300">{petType.name || pet.pet_type_id?.toString().slice(0, 8) || 'Unknown'}</td>
+                      <td className="px-4 py-4 text-zinc-300">
+                        {pet.pet_type?.name || 
+                         (typeof pet.pet_type === 'string' ? pet.pet_type : null) || 
+                         petTypes.find(t => t.id === pet.pet_type_id)?.name || 
+                         pet.pet_type_id?.toString().slice(0, 8) || 
+                         'Unknown'}
+                      </td>
                       <td className="px-4 py-4">
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${genderClass}`}>{pet.gender || 'Other'}</span>
                       </td>
@@ -358,16 +389,16 @@ const AdminPets = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowForm(false)} />
             <div className="relative z-10 w-full max-w-3xl max-h-[calc(100vh-4rem)] overflow-y-auto rounded-3xl border border-[#2A2A2A] bg-[#000000] shadow-2xl p-8">
-              <div className="flex items-center justify-between gap-4 border-b border-[#2A2A2A] p-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">{editingItem ? 'Edit pet' : 'New pet'}</p>
-                <h3 className="text-2xl font-semibold text-white">{editingItem ? 'Update pet' : 'Add pet'}</h3>
+              <div className="flex items-center justify-between gap-4 border-b border-[#2A2A2A] pb-4 mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">{editingItem ? 'Edit pet' : 'New pet'}</p>
+                  <h3 className="text-2xl font-semibold text-white">{editingItem ? 'Update pet' : 'Add pet'}</h3>
+                </div>
+                <button type="button" onClick={() => setShowForm(false)} className="rounded-full p-2 text-zinc-400 hover:text-white">
+                  <X size={20} />
+                </button>
               </div>
-              <button type="button" onClick={() => setShowForm(false)} className="rounded-full p-2 text-zinc-400 hover:text-white">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
+              <form onSubmit={handleCreateOrUpdate} className="space-y-4 px-2">
               <div className="space-y-2">
                 <label className="text-sm text-zinc-300">Name *</label>
                 <input
@@ -380,7 +411,7 @@ const AdminPets = () => {
                 <label className="text-sm text-zinc-300">Pet Type *</label>
                 <select
                   value={form.pet_type_id}
-                  onChange={(e) => setForm({ ...form, pet_type_id: e.target.value })}
+                  onChange={(e) => setForm({ ...form, pet_type_id: e.target.value, breed_id: '' })}
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                   required
                 >
@@ -399,14 +430,35 @@ const AdminPets = () => {
                     className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                   >
                     <option value="">Select breed</option>
-                    {petBreeds
-                      .filter((breed) => !form.pet_type_id || breed.pet_type_id === form.pet_type_id)
-                      .map((breed) => (
+                    {(() => {
+                      const filtered = form.pet_type_id
+                        ? petBreeds.filter(
+                            (breed) =>
+                              breed.pet_type_id &&
+                              String(breed.pet_type_id) === String(form.pet_type_id)
+                          )
+                        : petBreeds;
+                      // If no breeds match the selected type, fall back to showing all breeds
+                      const breedsToShow = filtered.length > 0 ? filtered : petBreeds;
+                      return breedsToShow.map((breed) => (
                         <option key={breed.id} value={breed.id}>
                           {breed.name}
+                          {filtered.length === 0 && breed.pet_type_id
+                            ? ` (${petTypes.find(t => t.id === breed.pet_type_id)?.name || ''})`
+                            : ''}
                         </option>
-                      ))}
+                      ));
+                    })()}
                   </select>
+                  {form.pet_type_id &&
+                    petBreeds.filter(
+                      (b) => b.pet_type_id && String(b.pet_type_id) === String(form.pet_type_id)
+                    ).length === 0 &&
+                    petBreeds.length > 0 && (
+                      <p className="text-xs text-amber-400 mt-1">
+                        No breeds linked to this pet type yet. Showing all breeds.
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-zinc-300">Gender *</label>
@@ -464,8 +516,9 @@ const AdminPets = () => {
                       const file = e.target.files?.[0] || null;
                       setSelectedImageFile(file);
                       if (file) {
-                        const previewUrl = URL.createObjectURL(file);
-                        setImagePreviewUrl(previewUrl);
+                        const localPreview = URL.createObjectURL(file);
+                        setImagePreviewUrl(localPreview);
+                        handleFileUpload(file);
                       } else {
                         setImagePreviewUrl('');
                       }
@@ -506,6 +559,18 @@ const AdminPets = () => {
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
                 />
               </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3">
+                <input
+                  type="checkbox"
+                  id="pet-available"
+                  checked={form.is_available}
+                  onChange={(e) => setForm({ ...form, is_available: e.target.checked })}
+                  className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-emerald-500 focus:ring-emerald-500"
+                />
+                <label htmlFor="pet-available" className="text-sm text-zinc-300">
+                  Mark as Available
+                </label>
+              </div>
               <div className="flex items-center gap-3">
                 <button
                   type="submit"
@@ -527,7 +592,9 @@ const AdminPets = () => {
                   Cancel
                 </button>
               </div>
-            </form>            </div>          </div>
+            </form>
+            </div>
+          </div>
         )}
       </div>
       <AdminToastContainer toasts={toasts} removeToast={removeToast} />

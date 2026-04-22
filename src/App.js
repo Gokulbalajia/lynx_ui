@@ -79,7 +79,9 @@ function AppRoutes() {
                 entry.product?.name || entry.pet?.name || entry.name ||
                 (itemType === 'pet' ? 'Pet item' : 'Product item'),
               img:
+                entry.product?.image_url ||
                 entry.product_variant?.images?.[0]?.image_url ||
+                entry.pet?.image_url ||
                 entry.pet?.images?.[0]?.image_url ||
                 entry.image_url ||
                 '',
@@ -101,7 +103,9 @@ function AppRoutes() {
   const handleAddToCart = async (product) => {
     // Standardize IDs: ensure we have item_type and correct ID fields
     const itemType = product.item_type || (product.pet_id ? 'pet' : 'product');
-    const entityId = product.id || product.product_variant_id || product.pet_id;
+    const entityId = itemType === 'product'
+      ? (product.product_variant_id || product.id)
+      : (product.pet_id || product.id);
 
     if (!entityId) {
       console.error('Cannot add item: Missing ID', product);

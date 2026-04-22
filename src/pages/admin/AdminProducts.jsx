@@ -15,11 +15,27 @@ const defaultForm = {
   sku: '',
   image_url: '',
   is_active: true,
+  ingredients_material: '',
+  weight: '',
+  flavor: '',
+  expiry_date: '',
+  pet_species_tags: '',
+  lifestyle_tags: '',
 };
 
 const formatCurrency = (value) => {
   const amount = Number(value || 0);
   return `₹${amount.toLocaleString('en-IN')}`;
+};
+
+// Helper to get image URL with fallback across multiple possible fields
+const getProductImage = (product) => {
+  return product.image_url || 
+         product.product_images?.find(img => img.is_primary)?.image_url || 
+         product.product_images?.[0]?.image_url || 
+         product.images?.find(img => img.is_primary)?.image_url || 
+         product.images?.[0]?.image_url || 
+         '';
 };
 
 const AdminProducts = () => {
@@ -105,24 +121,42 @@ const AdminProducts = () => {
       price: product.variants?.[0]?.price || '',
       stock: product.variants?.[0]?.stock || 0,
       sku: product.variants?.[0]?.sku || '',
-      image_url: product.images?.[0]?.image_url || '',
+      image_url: product.image_url || product.product_images?.find((img) => img.is_primary)?.image_url || product.product_images?.[0]?.image_url || product.images?.[0]?.image_url || '',
       is_active: product.is_active ?? true,
+      ingredients_material: product.details?.ingredients_material || '',
+      weight: product.details?.weight || '',
+      flavor: product.details?.flavor || '',
+      expiry_date: product.details?.expiry_date || '',
+      pet_species_tags: (product.details?.pet_species_tags || []).join(', '),
+      lifestyle_tags: (product.details?.lifestyle_tags || []).join(', '),
     });
     setSelectedImageFile(null);
     setImagePreviewUrl('');
     setShowForm(true);
   };
 
-  const uploadImageFile = async () => {
-    if (!selectedImageFile) return null;
+  const handleFileUpload = async (file) => {
+    if (!file) return;
 
     const uploadFormData = new FormData();
-    uploadFormData.append('file', selectedImageFile);
+    uploadFormData.append('file', file);
 
     setImageUploading(true);
     try {
       const response = await axios.post('/upload/upload-image', uploadFormData);
-      return response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+      const uploadedUrl = response.data?.image_url || response.data?.url || response.data?.data?.image_url || null;
+      
+      if (uploadedUrl) {
+        setForm(prev => ({ ...prev, image_url: uploadedUrl }));
+        setSelectedImageFile(null);
+        setImagePreviewUrl('');
+        addToast('Image uploaded successfully!', 'success');
+      } else {
+        addToast('Failed to get URL from upload response.', 'error');
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      addToast('Image upload failed: ' + (err.response?.data?.detail || err.message), 'error');
     } finally {
       setImageUploading(false);
     }
@@ -145,14 +179,7 @@ const AdminProducts = () => {
       return;
     }
 
-    let imageUrl = form.image_url || '';
-    if (selectedImageFile) {
-      const uploadedUrl = await uploadImageFile();
-      if (!uploadedUrl) {
-        throw new Error('Image upload failed.');
-      }
-      imageUrl = uploadedUrl;
-    }
+    const imageUrl = form.image_url || '';
 
     const payload = {
       name: form.name,
@@ -174,12 +201,16 @@ const AdminProducts = () => {
         },
       ],
       details: {
-        ingredients_material: '',
-        pet_species_tags: [],
-        lifestyle_tags: [],
-        weight: '',
-        flavor: '',
-        expiry_date: null,
+        ingredients_material: form.ingredients_material || '',
+        pet_species_tags: form.pet_species_tags
+          ? form.pet_species_tags.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        lifestyle_tags: form.lifestyle_tags
+          ? form.lifestyle_tags.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        weight: form.weight || '',
+        flavor: form.flavor || '',
+        expiry_date: form.expiry_date || undefined,
       },
     };
 
@@ -310,12 +341,17 @@ const AdminProducts = () => {
                   const category = categories.find((cat) => cat.id === product.category_id) || {};
                   const stockLabel = Number(variant.stock);
                   const stockColor = stockLabel === 0 ? 'text-red-400' : stockLabel <= 3 ? 'text-amber-400' : 'text-emerald-400';
+                  
                   return (
                     <tr key={product.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                       <td className="px-4 py-4 max-w-[220px]">
                         <div className="flex items-center gap-3">
-                          {product.images?.[0]?.image_url ? (
-                            <img src={product.images[0].image_url} alt={product.name} className="h-12 w-12 rounded-xl object-cover" />
+                          {getProductImage(product) ? (
+                            <img 
+                              src={getProductImage(product)} 
+                              alt={product.name} 
+                              className="h-12 w-12 rounded-xl object-cover" 
+                            />
                           ) : (
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-zinc-500">🛍️</div>
                           )}
@@ -414,6 +450,65 @@ const AdminProducts = () => {
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
                 />
               </div>
+              <p className="text-sm font-semibold text-zinc-300 mt-6 mb-4">Product Details</p>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">Ingredients / Material</label>
+                <input
+                  value={form.ingredients_material}
+                  onChange={(e) => setForm({ ...form, ingredients_material: e.target.value })}
+                  placeholder="e.g. Chicken, Rice, Vitamins"
+                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Weight</label>
+                  <input
+                    value={form.weight}
+                    onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                    placeholder="e.g. 1kg, 500g"
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Flavor</label>
+                  <input
+                    value={form.flavor}
+                    onChange={(e) => setForm({ ...form, flavor: e.target.value })}
+                    placeholder="e.g. Chicken, Beef"
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">Expiry Date</label>
+                <input
+                  type="date"
+                  value={form.expiry_date}
+                  onChange={(e) => setForm({ ...form, expiry_date: e.target.value })}
+                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">Pet Species Tags</label>
+                <input
+                  value={form.pet_species_tags}
+                  onChange={(e) => setForm({ ...form, pet_species_tags: e.target.value })}
+                  placeholder="e.g. Dog, Cat (comma-separated)"
+                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-zinc-500">Enter values separated by commas.</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-300">Lifestyle Tags</label>
+                <input
+                  value={form.lifestyle_tags}
+                  onChange={(e) => setForm({ ...form, lifestyle_tags: e.target.value })}
+                  placeholder="e.g. Active, Indoor (comma-separated)"
+                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-zinc-500">Enter values separated by commas.</p>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm text-zinc-300">Price *</label>
@@ -459,8 +554,9 @@ const AdminProducts = () => {
                     const file = e.target.files?.[0] || null;
                     setSelectedImageFile(file);
                     if (file) {
-                      const previewUrl = URL.createObjectURL(file);
-                      setImagePreviewUrl(previewUrl);
+                      const localPreview = URL.createObjectURL(file);
+                      setImagePreviewUrl(localPreview);
+                      handleFileUpload(file);
                     } else {
                       setImagePreviewUrl('');
                     }
@@ -512,7 +608,9 @@ const AdminProducts = () => {
                   Cancel
                 </button>
               </div>
-            </form>            </div>          </div>
+            </form>
+            </div>
+          </div>
         )}
       </div>
       <AdminToastContainer toasts={toasts} removeToast={removeToast} />

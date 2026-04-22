@@ -8,7 +8,6 @@ const defaultForm = {
   name: '',
   description: '',
   pet_type_id: '',
-  is_active: true,
 };
 
 const AdminPetBreeds = () => {
@@ -53,8 +52,15 @@ const AdminPetBreeds = () => {
   };
 
   const filteredBreeds = useMemo(() => {
-    return breeds.filter((breed) => `${breed.name || ''} ${breed.description || ''}`.toLowerCase().includes(query.toLowerCase()));
-  }, [breeds, query]);
+    return breeds.filter((breed) => {
+      const typeName = breed.pet_types?.name || 
+                       (typeof breed.pet_types === 'string' ? breed.pet_types : null) || 
+                       petTypes.find(t => t.id === breed.pet_type_id)?.name || 
+                       '';
+      const searchStr = `${breed.name || ''} ${breed.description || ''} ${typeName}`.toLowerCase();
+      return searchStr.includes(query.toLowerCase());
+    });
+  }, [breeds, query, petTypes]);
 
   const openForm = () => {
     setEditingItem(null);
@@ -67,8 +73,7 @@ const AdminPetBreeds = () => {
     setForm({
       name: breed.name || '',
       description: breed.description || '',
-      pet_type_id: breed.pet_type_id || breed.pet_type?.id || '',
-      is_active: breed.is_active ?? true,
+      pet_type_id: breed.pet_type_id || breed.pet_types?.id || '',
     });
     setShowForm(true);
   };
@@ -94,7 +99,6 @@ const AdminPetBreeds = () => {
       name: form.name,
       description: form.description,
       pet_type_id: form.pet_type_id || null,
-      is_active: form.is_active,
     };
 
     console.log('Sending payload:', payload); // Debug log
@@ -105,7 +109,9 @@ const AdminPetBreeds = () => {
         console.log('PUT response:', response.data); // Debug log
         addToast('Breed updated successfully!', 'success');
       } else {
-        await axios.post('/pet-breeds/', payload);
+        console.log('Payload being sent:', JSON.stringify(payload));
+        const response = await axios.post('/pet-breeds/', payload);
+        console.log('Response received:', JSON.stringify(response.data));
         addToast('Breed created successfully!', 'success');
       }
       setShowForm(false);
@@ -221,7 +227,13 @@ const AdminPetBreeds = () => {
                 filteredBreeds.map((breed) => (
                   <tr key={breed.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{breed.name}</td>
-                    <td className="px-4 py-4 text-zinc-300">{breed.pet_type?.name || breed.pet_type_id || 'Unknown'}</td>
+                    <td className="px-4 py-4 text-zinc-300">
+                      {breed.pet_types?.name || 
+                       (typeof breed.pet_types === 'string' ? breed.pet_types : null) || 
+                       petTypes.find(t => t.id === breed.pet_type_id)?.name || 
+                       breed.pet_type_id || 
+                       'Unknown'}
+                    </td>
                     <td className="px-4 py-4 text-zinc-300">{breed.description || 'No description'}</td>
                     <td className="px-4 py-4 text-sm text-zinc-300">
                       <div className="flex flex-wrap gap-2">
@@ -294,18 +306,6 @@ const AdminPetBreeds = () => {
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
                   />
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                    id="breed-active"
-                    className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
-                  />
-                  <label htmlFor="breed-active" className="text-sm text-zinc-300">
-                    Keep breed active
-                  </label>
                 </div>
                 <div className="flex items-center gap-3">
                   <button

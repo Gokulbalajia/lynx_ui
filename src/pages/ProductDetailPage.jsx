@@ -6,10 +6,14 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Copy, MessageCircle, Star,
 
 const formatCurrency = (value) => `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
 
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${process.env.REACT_APP_API_URL || 'https://pet-shop-api-t1hm.onrender.com'}${url}`;
+// Helper to get image URL with fallback across multiple possible fields
+const getProductImage = (product) => {
+  return product.image_url || 
+         product.product_images?.find(img => img.is_primary)?.image_url || 
+         product.product_images?.[0]?.image_url || 
+         product.images?.find(img => img.is_primary)?.image_url || 
+         product.images?.[0]?.image_url || 
+         '';
 };
 
 const formatExpiry = (expiryDate) => {
@@ -114,7 +118,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
         product_variant_id: selectedVariant.id,
         id: product.id,
         name: product.name,
-        img: product.images?.[0]?.image_url || '',
+        img: getProductImage(product),
         price: parseFloat(selectedVariant.price || '0'),
         quantity,
         category: product.category
@@ -153,7 +157,16 @@ const ProductDetailPage = ({ onAddToCart }) => {
     );
   }
 
-  const images = product.images?.length ? product.images : [{ image_url: '/images/placeholder.jpg', is_primary: true }];
+  const productImages = [
+    ...(product.image_url ? [{ image_url: product.image_url, is_primary: true }] : []),
+    ...(product.product_images || []),
+    ...(product.images || [])
+  ];
+
+  const images = productImages.length > 0 
+    ? productImages 
+    : [{ image_url: '/images/placeholder.jpg', is_primary: true }];
+
   const mainImage = images[mainImageIndex] || images[0];
   const selectedVariantStock = selectedVariant?.stock ?? 0;
 
@@ -174,7 +187,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
               className="relative overflow-hidden rounded-3xl bg-zinc-900 cursor-pointer"
               onClick={() => setLightboxOpen(true)}
             >
-              <img src={getImageUrl(mainImage.image_url)} alt={product.name} className="w-full h-[480px] object-cover transition duration-500 hover:scale-[1.03]" />
+              <img src={mainImage.image_url} alt={product.name} className="w-full h-[480px] object-cover transition duration-500 hover:scale-[1.03]" />
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {images.map((image, index) => (
@@ -184,7 +197,7 @@ const ProductDetailPage = ({ onAddToCart }) => {
                   onClick={() => setMainImageIndex(index)}
                   className={`flex-shrink-0 h-20 w-28 overflow-hidden rounded-2xl border ${index === mainImageIndex ? 'border-blue-500' : 'border-zinc-800'} bg-zinc-900`}
                 >
-                  <img src={getImageUrl(image.image_url)} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                  <img src={image.image_url} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -382,13 +395,13 @@ const ProductDetailPage = ({ onAddToCart }) => {
                   to={`/products/${related.id}`}
                   className="min-w-[260px] overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950"
                 >
-                  <div className="h-40 overflow-hidden bg-zinc-800">
-                    <img
-                      src={getImageUrl(related.images?.find((img) => img.is_primary)?.image_url || related.images?.[0]?.image_url || '/images/placeholder.jpg')}
-                      alt={related.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                    <div className="h-40 overflow-hidden bg-zinc-800">
+                      <img
+                        src={getProductImage(related)}
+                        alt={related.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   <div className="p-4">
                     <p className="text-xs uppercase tracking-[0.3em] text-amber-400 mb-2">{related.brand}</p>
                     <h3 className="text-white font-semibold mb-2" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

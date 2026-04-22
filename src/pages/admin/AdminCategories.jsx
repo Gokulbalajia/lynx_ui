@@ -7,7 +7,6 @@ import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
 const defaultForm = {
   name: '',
   description: '',
-  is_active: true,
 };
 
 const AdminCategories = () => {
@@ -62,7 +61,6 @@ const AdminCategories = () => {
     setForm({
       name: category.name || '',
       description: category.description || '',
-      is_active: true, // Force active when editing
     });
     setShowForm(true);
   };
@@ -87,7 +85,6 @@ const AdminCategories = () => {
     const payload = {
       name: form.name,
       description: form.description,
-      is_active: form.is_active,
     };
 
     try {
@@ -256,18 +253,6 @@ const AdminCategories = () => {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
                 />
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  id="category-active"
-                  className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-blue-500 focus:ring-blue-500"
-                />
-                <label htmlFor="category-active" className="text-sm text-zinc-300">
-                  Keep category active
-                </label>
               </div>
               <div className="flex items-center gap-3">
                 <button

@@ -6,8 +6,6 @@ import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
 
 const defaultForm = {
   name: '',
-  description: '',
-  is_active: true,
 };
 
 const AdminPetTypes = () => {
@@ -61,8 +59,6 @@ const AdminPetTypes = () => {
     setEditingItem(typeItem);
     setForm({
       name: typeItem.name || '',
-      description: typeItem.description || '',
-      is_active: typeItem.is_available ?? typeItem.is_active ?? true,
     });
     setShowForm(true);
   };
@@ -86,8 +82,6 @@ const AdminPetTypes = () => {
 
     const payload = {
       name: form.name,
-      description: form.description,
-      is_active: form.is_active,
     };
 
     try {
@@ -176,7 +170,6 @@ const AdminPetTypes = () => {
             <thead className="border-b border-[#2A2A2A] bg-[#000000]">
               <tr>
                 <th className="px-4 py-4 text-zinc-400">Name</th>
-                <th className="px-4 py-4 text-zinc-400">Description</th>
                 <th className="px-4 py-4 text-zinc-400">Actions</th>
               </tr>
             </thead>
@@ -186,12 +179,11 @@ const AdminPetTypes = () => {
                   <tr key={idx} className="animate-pulse border-b border-[#2A2A2A] bg-[#000000]">
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
-                    <td className="px-4 py-4">&nbsp;</td>
                   </tr>
                 ))
               ) : filteredTypes.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="px-4 py-10 text-center text-zinc-500">
+                  <td colSpan="2" className="px-4 py-10 text-center text-zinc-500">
                     No pet types available.
                   </td>
                 </tr>
@@ -199,7 +191,6 @@ const AdminPetTypes = () => {
                 filteredTypes.map((typeItem) => (
                   <tr key={typeItem.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
                     <td className="px-4 py-4 font-semibold text-white">{typeItem.name}</td>
-                    <td className="px-4 py-4 text-zinc-300">{typeItem.description || 'No description'}</td>
                     <td className="px-4 py-4 text-sm text-zinc-300">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -247,27 +238,6 @@ const AdminPetTypes = () => {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Description</label>
-                <textarea
-                  rows={4}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  id="pet-type-active"
-                  className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
-                />
-                <label htmlFor="pet-type-active" className="text-sm text-zinc-300">
-                  Keep pet type active
-                </label>
               </div>
               <div className="flex items-center gap-3">
                 <button
