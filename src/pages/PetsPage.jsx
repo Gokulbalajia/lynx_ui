@@ -67,7 +67,7 @@ const PetCard = ({ pet, onAddToCart, petTypes = [] }) => {
       <div className="p-4">
         <h3 className="font-bold text-white text-lg mb-1">{pet.name}</h3>
         <p className="text-zinc-500 text-sm mb-2">
-          {pet.breed?.name || pet.breed || 'Unknown breed'} • {getPetTypeName(pet) || 'Unknown type'}
+          {getPetTypeName(pet) || 'Unknown type'}
         </p>
 
 

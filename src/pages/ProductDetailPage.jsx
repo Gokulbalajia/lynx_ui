@@ -262,7 +262,6 @@ const ProductDetailPage = ({ onAddToCart }) => {
                         <div className="flex items-center justify-between gap-4">
                           <div>
                             <div className="text-sm text-zinc-400">{variant.label}</div>
-                            <div className="text-base font-semibold text-white">SKU: {variant.sku}</div>
                           </div>
                           <div className={`rounded-full px-3 py-1 text-sm font-semibold ${status.badge}`}>
                             {status.text}
@@ -375,7 +374,6 @@ const ProductDetailPage = ({ onAddToCart }) => {
                   <p><span className="font-semibold text-white">Weight:</span> {product.details?.weight || 'N/A'}</p>
                   <p><span className="font-semibold text-white">Flavor:</span> {product.details?.flavor || 'Unflavored'}</p>
                   <p><span className="font-semibold text-white">Expiry:</span> {formatExpiry(product.details?.expiry_date)}</p>
-                  <p><span className="font-semibold text-white">SKU:</span> {selectedVariant?.sku || 'N/A'}</p>
                 </div>
               )}
             </div>

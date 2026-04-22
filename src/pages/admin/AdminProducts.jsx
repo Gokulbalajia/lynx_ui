@@ -13,7 +13,6 @@ const defaultForm = {
   short_description: '',
   price: '',
   stock: 0,
-  sku: '',
   image_url: '',
   is_active: true,
 };
@@ -108,7 +107,6 @@ const AdminProducts = () => {
       short_description: product.short_description || '',
       price: product.variants?.[0]?.price || '',
       stock: product.variants?.[0]?.stock || 0,
-      sku: product.variants?.[0]?.sku || '',
       image_url: getBackendImage(product) || '',
       is_active: product.is_active ?? true,
     });
@@ -126,7 +124,7 @@ const AdminProducts = () => {
       return;
     }
 
-    if (!form.name.trim() || !form.category_id || !form.price || Number(form.price) <= 0 || Number(form.stock) < 0 || (!editingItem && !form.sku.trim())) {
+    if (!form.name.trim() || !form.category_id || !form.price || Number(form.price) <= 0 || Number(form.stock) < 0) {
       setError('Please fill valid values for required fields before submitting.');
       setSubmitting(false);
       return;
@@ -140,7 +138,7 @@ const AdminProducts = () => {
       is_active: form.is_active,
       variants: [
         {
-          sku: form.sku,
+          sku: '',
           price: Number(form.price),
           stock: Number(form.stock),
         },
@@ -303,8 +301,7 @@ const AdminProducts = () => {
                           </div>
                           <div>
                             <p className="font-bold text-white text-base leading-tight mb-1">{product.name}</p>
-                            <p className="text-zinc-500 text-xs font-medium tracking-wider uppercase">{product.sku || variant.sku || '—'}</p>
-                          </div>
+                        </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-zinc-300">{category.name || product.category_id || 'Unknown'}</td>
@@ -421,17 +418,6 @@ const AdminProducts = () => {
                   />
                 </div>
               </div>
-              {!editingItem && (
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">SKU *</label>
-                  <input
-                    value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                    required={!editingItem}
-                  />
-                </div>
-              )}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-semibold text-zinc-300">Product Image</label>

@@ -52,7 +52,7 @@ const PetCard = ({ pet, onAddToCart, petTypes = [] }) => {
       <div className="p-4">
         <h3 className="font-bold text-white text-lg mb-1">{pet.name}</h3>
         <p className="text-zinc-500 text-sm mb-2">
-          {pet.breed?.name || pet.breed || 'Unknown breed'} • {getPetTypeName(pet) || 'Unknown type'}
+          {getPetTypeName(pet) || 'Unknown type'}
         </p>
 
 
@@ -372,13 +372,6 @@ const PetDetailPage = ({ onAddToCart }) => {
                   <p className="text-white font-semibold">{getPetTypeName(pet) || 'Unknown type'}</p>
 
 
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-zinc-400">🧬</span>
-                <div>
-                  <p className="text-zinc-500 text-sm">Breed</p>
-                  <p className="text-white font-semibold">{pet.breed?.name || pet.breed || 'Unknown breed'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

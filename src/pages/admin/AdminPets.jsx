@@ -8,7 +8,6 @@ import { PUBLIC_IMAGES, normalizeImagePath, getPetImage, getBackendImage } from 
 const defaultForm = {
   name: '',
   pet_type_id: '',
-  breed_id: '',
   gender: 'Male',
   age_months: 0,
   price: '',
@@ -101,7 +100,6 @@ const AdminPets = () => {
     setForm({
       name: pet.name || '',
       pet_type_id: pet.pet_type_id || pet.pet_type?.id || '',
-      breed_id: pet.breed_id || pet.breed?.id || '',
       gender: pet.gender || 'Male',
       age_months: pet.age_months || 0,
       price: pet.price || '',
@@ -133,7 +131,7 @@ const AdminPets = () => {
     const payload = {
       name: form.name,
       pet_type_id: form.pet_type_id,
-      breed_id: form.breed_id || null,
+      breed_id: null,
       gender: form.gender,
       age_months: Number(form.age_months),
       price: Number(form.price),
@@ -284,7 +282,6 @@ const AdminPets = () => {
                           </div>
                           <div>
                             <p className="font-bold text-white text-base leading-tight mb-1">{pet.name}</p>
-                            <p className="text-zinc-500 text-xs font-medium tracking-wider uppercase">{pet.breed?.name || pet.breed_id || 'Breed unknown'}</p>
                           </div>
                         </div>
                       </td>
@@ -363,14 +360,6 @@ const AdminPets = () => {
                 </select>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Breed ID</label>
-                  <input
-                    value={form.breed_id}
-                    onChange={(e) => setForm({ ...form, breed_id: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
                 <div className="space-y-2">
                   <label className="text-sm text-zinc-300">Gender *</label>
                   <select
