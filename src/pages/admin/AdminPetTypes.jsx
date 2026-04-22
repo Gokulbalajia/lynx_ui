@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
-import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
+import { getPetTypeImage, PUBLIC_IMAGES } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
   description: '',
+  image_url: '',
   is_active: true,
 };
 
@@ -62,6 +64,7 @@ const AdminPetTypes = () => {
     setForm({
       name: typeItem.name || '',
       description: typeItem.description || '',
+      image_url: typeItem.image_url || typeItem.image || '',
       is_active: typeItem.is_active ?? true,
     });
     setShowForm(true);
@@ -87,6 +90,7 @@ const AdminPetTypes = () => {
     const payload = {
       name: form.name,
       description: form.description,
+      image_url: form.image_url,
     };
 
     try {
@@ -174,6 +178,7 @@ const AdminPetTypes = () => {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[#2A2A2A] bg-[#000000]">
               <tr>
+                <th className="px-4 py-4 text-zinc-400">Image</th>
                 <th className="px-4 py-4 text-zinc-400">Name</th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
                 <th className="px-4 py-4 text-zinc-400">Status</th>
@@ -199,6 +204,15 @@ const AdminPetTypes = () => {
               ) : (
                 filteredTypes.map((typeItem) => (
                   <tr key={typeItem.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
+                    <td className="px-4 py-4">
+                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+                        <img 
+                          src={getPetTypeImage(typeItem)} 
+                          alt={typeItem.name} 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </td>
                     <td className="px-4 py-4 font-semibold text-white">{typeItem.name}</td>
                     <td className="px-4 py-4 text-zinc-300">
                       {typeItem.description || typeItem.short_description || typeItem.desc || 'No description'}
@@ -247,37 +261,93 @@ const AdminPetTypes = () => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Name *</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                />
+            <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Name *</label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Description</label>
+                  <textarea
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                    id="pet-type-active"
+                    className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
+                  />
+                  <label htmlFor="pet-type-active" className="text-sm text-zinc-300">
+                    Keep pet type active
+                  </label>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Description</label>
-                <textarea
-                  rows={4}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
-                />
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300 flex items-center gap-2">
+                    <ImageIcon size={14} /> Image URL (Backend)
+                  </label>
+                  <input
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Or Select from Local Assets</label>
+                  <div className="grid grid-cols-4 gap-2 border border-[#2A2A2A] p-3 rounded-2xl h-[240px] overflow-y-auto no-scrollbar">
+                    {PUBLIC_IMAGES.map((img) => (
+                      <button
+                        key={img}
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: img })}
+                        className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                          form.image_url === img ? 'border-pink-500 bg-pink-500/10' : 'border-transparent'
+                        }`}
+                      >
+                        <img 
+                          src={`/images/${img}`} 
+                          alt="Asset" 
+                          className="h-full w-full object-cover group-hover:scale-110 transition-transform" 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest">Preview</p>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 overflow-hidden rounded-xl border border-zinc-700">
+                      <img 
+                        src={getPetTypeImage({ ...form, image_url: form.image_url })} 
+                        alt="Preview" 
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{form.name || 'Pet Type'}</p>
+                      <p className="text-xs text-zinc-500">Image Source: {form.image_url ? (form.image_url.startsWith('http') ? 'External' : 'Local') : 'Automatic Fallback'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  id="pet-type-active"
-                  className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
-                />
-                <label htmlFor="pet-type-active" className="text-sm text-zinc-300">
-                  Keep pet type active
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
+
+              <div className="md:col-span-2 flex items-center gap-3 pt-4 border-t border-[#2A2A2A]">
                 <button
                   type="submit"
                   disabled={submitting}

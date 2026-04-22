@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, CheckCircle2, CreditCard, Truck, X, Mail, MapPin, Phone, ExternalLink, Camera, Globe, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { getCategoryImage } from '../utils/assetUtils';
 
 
-const PET_CATEGORIES = [
-  { id: 'dog', name: 'Dog', image: '/images/pexels-hnoody93-58997.jpg' },
-  { id: 'cat', name: 'Cat', image: '/images/cat-7094808_1280.jpg' },
-  { id: 'fish', name: 'Fish', image: '/images/make-realistic-colourful-fish-swimming-gracefully-tranquil-underwater-garden-photo-realist_1098360-2533.png' },
-  { id: 'rabbit', name: 'Rabbit', image: '/images/white-hotot-rabbit-eating-grass-509265984-5c0da06546e0fb0001366ac0.jpg' },
-  { id: 'bird', name: 'Bird', image: '/images/popugai-pticy-zhivotnye-31997.jpg' }
-];
+// Categories will be fetched from backend
 
 const HERO_SLIDES = [
   { id: 1, title: "Premium Dog Nutrition", subtitle: "Give your best friend the best fuel.", img: "/images/493584.jpg", color: "from-blue-600" },
@@ -262,6 +258,23 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
     { id: 24, category: 'bird', name: 'Cage', price: 5999, img: '/images/cGemini_Generated_Image_19gho819gho819gh.png' },
     { id: 25, category: 'bird', name: 'Accessories', price: 399, img: '/images/aGemini_Generated_Image_19gho819gho819gh.png' },
   ]);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await axios.get('/categories/');
+        setCategories(res.data || []);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, []);
+
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
@@ -276,17 +289,31 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
             <p className="text-zinc-500">Pick a category to find specific items.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {PET_CATEGORIES.map((pet) => (
-              <button key={pet.id} className="group relative h-48 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden hover:border-blue-500 transition-all flex flex-col cursor-pointer">
-                <div className="flex-1 relative overflow-hidden">
-                  <img src={pet.image} alt={pet.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all" />
-                </div>
-                <div className="p-4 bg-zinc-900">
-                  <span className="font-bold text-lg text-white">{pet.name}</span>
-                </div>
-              </button>
-            ))}
+            {loadingCategories ? (
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="h-48 bg-zinc-900 border border-zinc-800 rounded-3xl animate-pulse" />
+              ))
+            ) : (
+              categories.map((cat) => (
+                <Link 
+                  key={cat.id} 
+                  to={`/products?category=${cat.id}`}
+                  className="group relative h-48 bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden hover:border-blue-500 transition-all flex flex-col cursor-pointer"
+                >
+                  <div className="flex-1 relative overflow-hidden">
+                    <img 
+                      src={getCategoryImage(cat)} 
+                      alt={cat.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all" />
+                  </div>
+                  <div className="p-4 bg-zinc-900">
+                    <span className="font-bold text-lg text-white">{cat.name}</span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </section>
 
@@ -322,14 +349,14 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
         {/* Products by Category */}
         <section className="space-y-8">
           <h2 className="text-3xl font-bold text-white">Shop pet products by Category</h2>
-          {PET_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <div key={cat.id} className="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
               <div className="flex items-center gap-4 border-l-4 border-blue-600 pl-4 mb-6">
                 <h3 className="text-2xl font-bold text-white">For {cat.name}s</h3>
               </div>
               <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar">
                 {mockCategories
-                  .filter(p => p.category === cat.id)
+                  .filter(p => String(p.category).toLowerCase() === String(cat.name).toLowerCase())
                   .map(prod => (
                     <ProductCard
                       key={prod.id}

@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
-import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
+import { getPetBreedImage, PUBLIC_IMAGES } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
   description: '',
   pet_type_id: '',
+  image_url: '',
   is_active: true,
 };
 
@@ -67,6 +69,7 @@ const AdminPetBreeds = () => {
       name: breed.name || '',
       description: breed.description || '',
       pet_type_id: breed.pet_type_id || breed.pet_type?.id || '',
+      image_url: breed.image_url || breed.image || '',
       is_active: breed.is_active ?? true,
     });
     setShowForm(true);
@@ -93,6 +96,7 @@ const AdminPetBreeds = () => {
       name: form.name,
       description: form.description,
       pet_type_id: form.pet_type_id || null,
+      image_url: form.image_url,
       is_active: form.is_active,
     };
 
@@ -200,10 +204,10 @@ const AdminPetBreeds = () => {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[#2A2A2A] bg-[#000000]">
               <tr>
+                <th className="px-4 py-4 text-zinc-400">Image</th>
                 <th className="px-4 py-4 text-zinc-400">Breed</th>
                 <th className="px-4 py-4 text-zinc-400">Pet Type </th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
-
                 <th className="px-4 py-4 text-zinc-400">Status</th>
                 <th className="px-4 py-4 text-zinc-400">Actions</th>
               </tr>
@@ -217,17 +221,27 @@ const AdminPetBreeds = () => {
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
                     <td className="px-4 py-4">&nbsp;</td>
+                    <td className="px-4 py-4">&nbsp;</td>
                   </tr>
                 ))
               ) : filteredBreeds.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-10 text-center text-zinc-500">
+                  <td colSpan="6" className="px-4 py-10 text-center text-zinc-500">
                     No breeds found.
                   </td>
                 </tr>
               ) : (
                 filteredBreeds.map((breed) => (
                   <tr key={breed.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
+                    <td className="px-4 py-4">
+                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+                        <img 
+                          src={getPetBreedImage(breed)} 
+                          alt={breed.name} 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </td>
                     <td className="px-4 py-4 font-semibold text-white">{breed.name}</td>
                     <td className="px-4 py-4 text-zinc-300">
                       {getPetTypeName(breed) || 'Unknown'}
@@ -281,54 +295,112 @@ const AdminPetBreeds = () => {
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Name *</label>
-                  <input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                  />
+              <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-zinc-300">Name *</label>
+                    <input
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-zinc-300">Pet Type Name *</label>
+                    <select
+                      value={form.pet_type_id}
+                      onChange={(e) => setForm({ ...form, pet_type_id: e.target.value })}
+                      className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="">Select pet type name</option>
+                      {petTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-zinc-300">Description</label>
+                    <textarea
+                      rows={4}
+                      value={form.description}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                      id="breed-active"
+                      className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
+                    />
+                    <label htmlFor="breed-active" className="text-sm text-zinc-300">
+                      Keep breed active
+                    </label>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Pet Type Name *</label>
-                  <select
 
-                    value={form.pet_type_id}
-                    onChange={(e) => setForm({ ...form, pet_type_id: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                  >
-                    <option value="">Select pet type name</option>
-                    {petTypes.map((type) => (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-zinc-300 flex items-center gap-2">
+                      <ImageIcon size={14} /> Image URL (Backend)
+                    </label>
+                    <input
+                      value={form.image_url}
+                      onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
 
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="space-y-2">
+                    <label className="text-sm text-zinc-300">Or Select from Local Assets</label>
+                    <div className="grid grid-cols-4 gap-2 border border-[#2A2A2A] p-3 rounded-2xl h-[240px] overflow-y-auto no-scrollbar">
+                      {PUBLIC_IMAGES.map((img) => (
+                        <button
+                          key={img}
+                          type="button"
+                          onClick={() => setForm({ ...form, image_url: img })}
+                          className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                            form.image_url === img ? 'border-pink-500 bg-pink-500/10' : 'border-transparent'
+                          }`}
+                        >
+                          <img 
+                            src={`/images/${img}`} 
+                            alt="Asset" 
+                            className="h-full w-full object-cover group-hover:scale-110 transition-transform" 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+                    <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest">Preview</p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-20 w-20 overflow-hidden rounded-xl border border-zinc-700">
+                        <img 
+                          src={getPetBreedImage({ 
+                            ...form, 
+                            image_url: form.image_url,
+                            pet_type: petTypes.find(t => String(t.id) === String(form.pet_type_id))
+                          })} 
+                          alt="Preview" 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{form.name || 'Pet Breed'}</p>
+                        <p className="text-xs text-zinc-500">Image Source: {form.image_url ? (form.image_url.startsWith('http') ? 'External' : 'Local') : 'Automatic Fallback'}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-zinc-300">Description</label>
-                  <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                    id="breed-active"
-                    className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-pink-500 focus:ring-pink-500"
-                  />
-                  <label htmlFor="breed-active" className="text-sm text-zinc-300">
-                    Keep breed active
-                  </label>
-                </div>
-                <div className="flex items-center gap-3">
+
+                <div className="md:col-span-2 flex items-center gap-3 pt-4 border-t border-[#2A2A2A]">
                   <button
                     type="submit"
                     disabled={submitting}

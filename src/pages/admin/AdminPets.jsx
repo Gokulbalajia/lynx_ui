@@ -3,7 +3,7 @@ import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
 import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
-import { PUBLIC_IMAGES, normalizeImagePath, getPetImage } from '../../utils/assetUtils';
+import { PUBLIC_IMAGES, normalizeImagePath, getPetImage, getBackendImage } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
@@ -107,7 +107,7 @@ const AdminPets = () => {
       price: pet.price || '',
       stock: pet.stock || 1,
       description: pet.description || '',
-      image_url: pet.images?.[0]?.image_url || '',
+      image_url: getBackendImage(pet) || '',
       is_available: pet.is_available ?? true,
     });
     setShowForm(true);

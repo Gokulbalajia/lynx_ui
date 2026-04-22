@@ -77,6 +77,32 @@ export const FALLBACK_IMAGES = {
 };
 
 /**
+ * Checks for any valid backend image URL field on an object.
+ */
+export const getBackendImage = (item) => {
+  if (!item) return null;
+  const possibleFields = ['image_url', 'imageUrl', 'image', 'image_path', 'img_url', 'img'];
+  
+  // 1. Check direct fields
+  for (const field of possibleFields) {
+    if (item[field] && typeof item[field] === 'string' && item[field].length > 5) {
+      return item[field];
+    }
+  }
+
+  // 2. Check images array
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    const primary = item.images.find(img => img.is_primary) || item.images[0];
+    for (const field of possibleFields) {
+      if (primary[field] && typeof primary[field] === 'string' && primary[field].length > 5) {
+        return primary[field];
+      }
+    }
+  }
+  return null;
+};
+
+/**
  * Gets the most appropriate image for a pet.
  * @param {Object} pet - The pet object.
  * @returns {string} - The image URL.
@@ -84,13 +110,8 @@ export const FALLBACK_IMAGES = {
 export const getPetImage = (pet) => {
   if (!pet) return FALLBACK_IMAGES.default;
   
-  // 1. Check if pet already has images from API
-  if (pet.images && pet.images.length > 0) {
-    const primary = pet.images.find(img => img.is_primary) || pet.images[0];
-    if (primary.image_url) {
-      return normalizeImagePath(primary.image_url);
-    }
-  }
+  const backendImg = getBackendImage(pet);
+  if (backendImg) return normalizeImagePath(backendImg);
 
   // 2. Use type-based fallbacks
   const type = (pet.pet_type?.name || pet.pet_type || '').toString().toLowerCase();
@@ -106,6 +127,7 @@ export const getPetImage = (pet) => {
   return FALLBACK_IMAGES.default;
 };
 
+
 /**
  * Gets the most appropriate image for a product.
  * @param {Object} product - The product object.
@@ -114,13 +136,8 @@ export const getPetImage = (pet) => {
 export const getProductImage = (product) => {
   if (!product) return FALLBACK_IMAGES.food;
 
-  // 1. Check if product already has images from API
-  if (product.images && product.images.length > 0) {
-    const primary = product.images.find(img => img.is_primary) || product.images[0];
-    if (primary.image_url) {
-      return normalizeImagePath(primary.image_url);
-    }
-  }
+  const backendImg = getBackendImage(product);
+  if (backendImg) return normalizeImagePath(backendImg);
 
   // 2. Use highly specific keyword matching for names
   const name = (product.name || '').toLowerCase();
@@ -129,34 +146,31 @@ export const getProductImage = (product) => {
   const description = (product.short_description || '').toLowerCase();
   
   const combinedText = `${name} ${category} ${brand} ${description}`;
-
-  // Priority 0: Exact/Highly Specific Name Matches (requested by user)
-  const lowerName = name.toLowerCase();
-  if (lowerName.includes('royal canin adult dog food')) return '/images/royal_canin_adult_dog_food.png';
-  if (lowerName.includes('taiyo fish food')) return '/images/taiyo_fish_food.png';
-  if (lowerName.includes('bird flight cage')) return '/images/bird_flight_cage.png';
-  if (lowerName.includes('drools ocean fish')) return '/images/drools_ocean_fish.png';
-  if (lowerName.includes('erina-ep shampoo') || lowerName.includes('erina ep shampoo')) return '/images/erina_ep_shampoo.png';
-  if (lowerName.includes('veggie sticks')) return '/images/veggie_sticks.png';
-  if (lowerName.includes('velvet bed')) return '/images/velvet_bed.png';
-  if (lowerName.includes('cooling gel mat')) return '/images/cooling_gel_mat.png';
-  if (lowerName.includes('digyton drops')) return '/images/digyton_drops.png';
-  if (lowerName.includes('farmina n&d') || lowerName.includes('farmina')) return '/images/farmina_dog_food.png';
-  if (lowerName.includes('pedigree adults') || lowerName.includes('pedigree')) return '/images/pedigree_dog_food.png';
-  if (lowerName.includes('cage for birds') || lowerName.includes('bird cage')) return '/images/bird_cage.png';
-  if (lowerName.includes('aquarium tank') || lowerName.includes('aquarium')) return '/images/aquarium_tank.png';
+  
+  // Priority 0: Exact Matches
+  if (name.includes('royal canin')) return '/images/royal_canin_adult_dog_food.png';
+  if (name.includes('taiyo')) return '/images/taiyo_fish_food.png';
+  if (name.includes('bird flight')) return '/images/bird_flight_cage.png';
+  if (name.includes('drools')) return '/images/drools_ocean_fish.png';
+  if (name.includes('erina')) return '/images/erina_ep_shampoo.png';
+  if (name.includes('veggie sticks')) return '/images/veggie_sticks.png';
+  if (name.includes('velvet bed')) return '/images/velvet_bed.png';
+  if (name.includes('cooling gel mat')) return '/images/cooling_gel_mat.png';
+  if (name.includes('digyton drops')) return '/images/digyton_drops.png';
+  if (name.includes('farmina')) return '/images/farmina_dog_food.png';
+  if (name.includes('pedigree')) return '/images/pedigree_dog_food.png';
+  if (name.includes('bird cage')) return '/images/bird_cage.png';
+  if (name.includes('aquarium tank')) return '/images/aquarium_tank.png';
 
   // Species check
-  const isDog = combinedText.includes('dog') || combinedText.includes('puppy') || combinedText.includes('pedigree') || combinedText.includes('drools') || combinedText.includes('royal canin') || combinedText.includes('farmina') || combinedText.includes('health up');
-  const isCat = combinedText.includes('cat') || combinedText.includes('kitten') || combinedText.includes('whiskas') || combinedText.includes('siamese') || combinedText.includes('persian') || combinedText.includes('meow') || combinedText.includes('sheba');
-  const isBird = combinedText.includes('bird') || combinedText.includes('parrot') || combinedText.includes('parakeet') || combinedText.includes('lovebird');
-  const isFish = combinedText.includes('fish') || combinedText.includes('betta') || combinedText.includes('aquarium') || combinedText.includes('tank') || combinedText.includes('taiyo') || combinedText.includes('goldfish') || combinedText.includes('guppy');
-  const isRabbit = combinedText.includes('rabbit') || combinedText.includes('bunny') || combinedText.includes('hamster') || combinedText.includes('veggie') || combinedText.includes('carrot');
+  const isDog = combinedText.includes('dog') || combinedText.includes('puppy') || combinedText.includes('pedigree') || combinedText.includes('farmina');
+  const isCat = combinedText.includes('cat') || combinedText.includes('kitten') || combinedText.includes('whiskas');
+  const isBird = combinedText.includes('bird') || combinedText.includes('parrot');
+  const isFish = combinedText.includes('fish') || combinedText.includes('aquarium') || combinedText.includes('taiyo');
+  const isRabbit = combinedText.includes('rabbit') || combinedText.includes('bunny') || combinedText.includes('veggie');
 
-  // Priority 1: Product-Focused Defaults (Avoid just showing the animal)
-  
   // Food / Treats / Nutrition
-  if (combinedText.includes('food') || combinedText.includes('treat') || combinedText.includes('sticks') || combinedText.includes('nutrition') || combinedText.includes('kibble') || combinedText.includes('grain')) {
+  if (combinedText.includes('food') || combinedText.includes('treat') || combinedText.includes('sticks')) {
     if (isCat) return '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (7).png';
     if (isFish) return '/images/FGemini_Generated_Image_dx17y1dx17y1dx17.png';
     if (isDog) return '/images/493584.jpg';
@@ -164,41 +178,70 @@ export const getProductImage = (product) => {
     return FALLBACK_IMAGES.food;
   }
 
-  // Grooming / Shampoo / Wash
-  if (combinedText.includes('shampoo') || combinedText.includes('erina') || combinedText.includes('wash') || combinedText.includes('soap') || combinedText.includes('grooming') || combinedText.includes('brush')) {
-    return FALLBACK_IMAGES.grooming;
-  }
+  // Generic Product Fallbacks
+  if (isCat) return '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (1).png';
+  if (isDog) return '/images/493584.jpg';
+  if (isFish) return '/images/FGemini_Generated_Image_dx17y1dx17y1dx17.png';
+  if (isBird) return '/images/popugai-pticy-zhivotnye-31997.jpg';
+  if (isRabbit) return '/images/2962543.jpg';
 
-  // Health / Medicine / Drops
-  if (combinedText.includes('drops') || combinedText.includes('digyton') || combinedText.includes('health') || combinedText.includes('medicine') || combinedText.includes('vitamin') || combinedText.includes('spray')) {
-    return FALLBACK_IMAGES.health;
-  }
+  return FALLBACK_IMAGES.default;
+};
 
-  // Bedding / Bed / Mat
-  if (combinedText.includes('bed') || combinedText.includes('mat') || combinedText.includes('cushion') || combinedText.includes('velvet') || combinedText.includes('orthopedic')) {
-    return FALLBACK_IMAGES.bedding;
-  }
+/**
+ * Gets the most appropriate image for a category.
+ */
+export const getCategoryImage = (category) => {
+  if (!category) return FALLBACK_IMAGES.default;
+  const backendImg = getBackendImage(category);
+  if (backendImg) return normalizeImagePath(backendImg);
 
-  // Habitat / Cage / Tank
-  if (combinedText.includes('cage') || combinedText.includes('aquarium') || combinedText.includes('tank') || combinedText.includes('house') || combinedText.includes('habitat')) {
-    if (isBird) return '/images/bird-cage-product.png';
-    if (isRabbit) return '/images/2962543.jpg';
-    return FALLBACK_IMAGES.cage;
-  }
+  const name = (category.name || '').toLowerCase();
+  if (name.includes('dog')) return FALLBACK_IMAGES.dog;
+  if (name.includes('cat')) return FALLBACK_IMAGES.cat;
+  if (name.includes('fish')) return FALLBACK_IMAGES.fish;
+  if (name.includes('bird')) return FALLBACK_IMAGES.bird;
+  if (name.includes('rabbit')) return FALLBACK_IMAGES.rabbit;
+  if (name.includes('food')) return FALLBACK_IMAGES.food;
+  if (name.includes('toy')) return FALLBACK_IMAGES.toys;
+  if (name.includes('accessories')) return FALLBACK_IMAGES.accessories;
+  
+  return FALLBACK_IMAGES.default;
+};
 
-  // Accessories / Collars / Leash
-  if (combinedText.includes('collar') || combinedText.includes('leash') || combinedText.includes('harness') || combinedText.includes('belt') || combinedText.includes('accessories')) {
-    return FALLBACK_IMAGES.accessories;
-  }
+/**
+ * Gets the most appropriate image for a pet type.
+ */
+export const getPetTypeImage = (type) => {
+  if (!type) return FALLBACK_IMAGES.default;
+  const backendImg = getBackendImage(type);
+  if (backendImg) return normalizeImagePath(backendImg);
 
-  // Priority 2: Generic Product Fallbacks (Try to use product-related images even if generic)
-  if (isCat) return '/images/Gemini_Generated_Image_2wzhlj2wzhlj2wzh (1).png'; // Cat bed/item
-  if (isDog) return '/images/493584.jpg'; // Dog kibble
-  if (isFish) return '/images/FGemini_Generated_Image_dx17y1dx17y1dx17.png'; // Fish item
-  if (isBird) return '/images/popugai-pticy-zhivotnye-31997.jpg'; // Bird cage/perch
-  if (isRabbit) return '/images/2962543.jpg'; // Rabbit item
+  const name = (type.name || '').toLowerCase();
+  if (name.includes('dog')) return FALLBACK_IMAGES.dog;
+  if (name.includes('cat')) return FALLBACK_IMAGES.cat;
+  if (name.includes('fish')) return FALLBACK_IMAGES.fish;
+  if (name.includes('bird')) return FALLBACK_IMAGES.bird;
+  if (name.includes('rabbit')) return FALLBACK_IMAGES.rabbit;
+  
+  return FALLBACK_IMAGES.default;
+};
 
-  // Final Fallback for any product
+/**
+ * Gets the most appropriate image for a pet breed.
+ */
+export const getPetBreedImage = (breed) => {
+  if (!breed) return FALLBACK_IMAGES.default;
+  const backendImg = getBackendImage(breed);
+  if (backendImg) return normalizeImagePath(backendImg);
+
+  const name = (breed.name || '').toLowerCase();
+  const typeName = (breed.pet_type?.name || breed.pet_type_name || '').toLowerCase();
+  
+  if (name.includes('dog') || typeName.includes('dog')) return FALLBACK_IMAGES.dog;
+  if (name.includes('cat') || typeName.includes('cat')) return FALLBACK_IMAGES.cat;
+  if (name.includes('bird') || typeName.includes('bird')) return FALLBACK_IMAGES.bird;
+  
   return FALLBACK_IMAGES.default;
 };
 
@@ -233,6 +276,7 @@ export const getRecommendedImages = (product) => {
 
   return Array.from(recommendations).filter(img => PUBLIC_IMAGES.includes(img));
 };
+
 
 /**
  * Normalizes an image path to ensure it's valid for <img> tags.

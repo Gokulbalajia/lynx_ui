@@ -4,7 +4,7 @@ import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
 import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon, ChevronDown } from 'lucide-react';
-import { PUBLIC_IMAGES, normalizeImagePath, getProductImage, getRecommendedImages, PRODUCT_SORT_ORDER } from '../../utils/assetUtils';
+import { PUBLIC_IMAGES, normalizeImagePath, getProductImage, getBackendImage, getRecommendedImages, PRODUCT_SORT_ORDER } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
@@ -109,7 +109,7 @@ const AdminProducts = () => {
       price: product.variants?.[0]?.price || '',
       stock: product.variants?.[0]?.stock || 0,
       sku: product.variants?.[0]?.sku || '',
-      image_url: product.images?.[0]?.image_url || '',
+      image_url: getBackendImage(product) || '',
       is_active: product.is_active ?? true,
     });
     setShowForm(true);

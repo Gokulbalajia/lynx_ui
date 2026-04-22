@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import { useAdminToast, AdminToastContainer } from '../../hooks/useAdminToast';
-import { Plus, Loader2, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Loader2, Pencil, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
+import { getCategoryImage, PUBLIC_IMAGES } from '../../utils/assetUtils';
 
 const defaultForm = {
   name: '',
   description: '',
+  image_url: '',
   is_active: true,
 };
 
@@ -62,6 +64,7 @@ const AdminCategories = () => {
     setForm({
       name: category.name || '',
       description: category.description || '',
+      image_url: category.image_url || category.image || '',
       is_active: category.is_active ?? true,
     });
     setShowForm(true);
@@ -87,6 +90,7 @@ const AdminCategories = () => {
     const payload = {
       name: form.name,
       description: form.description,
+      image_url: form.image_url,
     };
 
     try {
@@ -174,6 +178,7 @@ const AdminCategories = () => {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[#2A2A2A] bg-[#000000]">
               <tr>
+                <th className="px-4 py-4 text-zinc-400">Image</th>
                 <th className="px-4 py-4 text-zinc-400">Name</th>
                 <th className="px-4 py-4 text-zinc-400">Description</th>
                 <th className="px-4 py-4 text-zinc-400">Status</th>
@@ -199,6 +204,15 @@ const AdminCategories = () => {
               ) : (
                 filteredCategories.map((category) => (
                   <tr key={category.id} className="border-b border-[#2A2A2A] hover:bg-[#000000]/70 transition-colors">
+                    <td className="px-4 py-4">
+                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+                        <img 
+                          src={getCategoryImage(category)} 
+                          alt={category.name} 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </td>
                     <td className="px-4 py-4 font-semibold text-white">{category.name}</td>
                     <td className="px-4 py-4 text-zinc-300">
                       {category.description || category.short_description || category.desc || 'No description'}
@@ -247,37 +261,93 @@ const AdminCategories = () => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Name *</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
-                />
+            <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Name *</label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Description</label>
+                  <textarea
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                    id="category-active"
+                    className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-blue-500 focus:ring-blue-500"
+                  />
+                  <label htmlFor="category-active" className="text-sm text-zinc-300">
+                    Keep category active
+                  </label>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-zinc-300">Description</label>
-                <textarea
-                  rows={4}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500 resize-none"
-                />
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300 flex items-center gap-2">
+                    <ImageIcon size={14} /> Image URL (Backend)
+                  </label>
+                  <input
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full rounded-2xl border border-[#2A2A2A] bg-[#000000] px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-zinc-300">Or Select from Local Assets</label>
+                  <div className="grid grid-cols-4 gap-2 border border-[#2A2A2A] p-3 rounded-2xl h-[240px] overflow-y-auto no-scrollbar">
+                    {PUBLIC_IMAGES.map((img) => (
+                      <button
+                        key={img}
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: img })}
+                        className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
+                          form.image_url === img ? 'border-sky-500 bg-sky-500/10' : 'border-transparent'
+                        }`}
+                      >
+                        <img 
+                          src={`/images/${img}`} 
+                          alt="Asset" 
+                          className="h-full w-full object-cover group-hover:scale-110 transition-transform" 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <p className="text-xs text-zinc-500 mb-2 uppercase tracking-widest">Preview</p>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 overflow-hidden rounded-xl border border-zinc-700">
+                      <img 
+                        src={getCategoryImage({ ...form, image_url: form.image_url })} 
+                        alt="Preview" 
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{form.name || 'Category Name'}</p>
+                      <p className="text-xs text-zinc-500">Image Source: {form.image_url ? (form.image_url.startsWith('http') ? 'External' : 'Local') : 'Automatic Fallback'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  id="category-active"
-                  className="h-4 w-4 rounded border-[#2A2A2A] bg-[#000000] text-blue-500 focus:ring-blue-500"
-                />
-                <label htmlFor="category-active" className="text-sm text-zinc-300">
-                  Keep category active
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
+
+              <div className="md:col-span-2 flex items-center gap-3 pt-4 border-t border-[#2A2A2A]">
                 <button
                   type="submit"
                   disabled={submitting}
