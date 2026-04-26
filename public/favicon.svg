@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Sleek modern gradient background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <!-- App-icon style rounded square -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="url(#bg)" />
+  
+  <!-- Geometric Dog Head -->
+  <g stroke="#ffffff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Left Ear (floppy) -->
+    <path d="M 30 35 L 18 55 L 35 45 Z" fill="#ffffff"/>
+    <!-- Right Ear (floppy) -->
+    <path d="M 70 35 L 82 55 L 65 45 Z" fill="#ffffff"/>
+    <!-- Main Head / Snout -->
+    <path d="M 30 35 L 70 35 L 60 70 L 40 70 Z" fill="#ffffff"/>
+  </g>
+  
+  <!-- Eyes -->
+  <circle cx="42" cy="50" r="3.5" fill="#0f172a"/>
+  <circle cx="58" cy="50" r="3.5" fill="#0f172a"/>
+  
+  <!-- Cute Nose -->
+  <ellipse cx="50" cy="61" rx="5" ry="3.5" fill="#0f172a"/>
+  
+  <!-- Small Smile -->
+  <path d="M 46 67 Q 50 71 54 67" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+</svg>
