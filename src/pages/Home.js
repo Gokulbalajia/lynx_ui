@@ -221,7 +221,7 @@ const HeroCarousel = ({ onAddToCart, isAdmin }) => {
 };
 
 const Home = ({ cartItems, onAddToCart, onClearCart }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, isAuthenticated } = useAuth();
   const [mockCategories] = useState([
     // 🐶 DOG
     { id: 1, category: 'dog', name: 'Food', price: 2499, img: '/images/Gemini_Generated_Image_u7oiz0u7oiz0u7oi.png' },
@@ -285,6 +285,9 @@ const Home = ({ cartItems, onAddToCart, onClearCart }) => {
         {/* Pet Categories */}
         <section>
           <div className="text-center mb-12">
+            {isAuthenticated && user && (
+              <h1 className="text-2xl font-bold text-blue-500 mb-4">Welcome back, {user.name}!</h1>
+            )}
             <h2 className="text-4xl font-black text-white mb-2">Who are you shopping for?</h2>
             <p className="text-zinc-500">Pick a category to find specific items.</p>
           </div>
